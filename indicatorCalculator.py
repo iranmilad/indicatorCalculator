@@ -763,7 +763,7 @@ class IndicatorUpdate(threading.Thread):
             float(symbols_return['ichimoku']['value']['ichimoku_b']) if not math.isnan(symbols_return['ichimoku']['value']['ichimoku_b']) else 0,
             float(symbols_return['ichimoku']['value']['ichimoku_base_line']) if not math.isnan(symbols_return['ichimoku']['value']['ichimoku_base_line']) else 0,
             float(symbols_return['ichimoku']['value']['ichimoku_conversion_line'])  if not math.isnan(symbols_return['ichimoku']['value']['ichimoku_conversion_line']) else 0,
-              
+             
               
             float(symbols_return['historical_price']['value']['low']) if not math.isnan(symbols_return['historical_price']['value']['low']) else 0,
             float(symbols_return['historical_price']['value']['high']) if not math.isnan(symbols_return['historical_price']['value']['high']) else 0,
