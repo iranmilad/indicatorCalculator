@@ -633,6 +633,39 @@ class IndicatorUpdate(threading.Thread):
                             'last_price': df.iloc[-1]['close'],
                     }
 
+                elif pattern=="PSAR":
+                    df['psar']=ta.trend.PSARIndicator(high=df["high"], low=df["low"], close= df["close"]).psar()
+                    df['psar_down']=ta.trend.PSARIndicator(high=df["high"], low=df["low"], close= df["close"]).psar_down()
+                    df['psar_down_indicator']=ta.trend.PSARIndicator(high=df["high"], low=df["low"], close= df["close"]).psar_down_indicator()
+                    df['psar_up']=ta.trend.PSARIndicator(high=df["high"], low=df["low"], close= df["close"]).psar_up()
+                    df['psar_up_indicator']=ta.trend.PSARIndicator(high=df["high"], low=df["low"], close= df["close"]).psar_up_indicator()
+                    
+
+                    previous_df['psar']= ta.trend.PSARIndicator(high=previous_df["high"], low=previous_df["low"], close= previous_df["close"]).psar()
+                    previous_df['psar_down']= ta.trend.PSARIndicator(high=previous_df["high"], low=previous_df["low"], close= previous_df["close"]).psar_down()
+                    previous_df['psar_down_indicator']= ta.trend.PSARIndicator(high=previous_df["high"], low=previous_df["low"], close= previous_df["close"]).psar_down_indicator()
+                    previous_df['psar_up']= ta.trend.PSARIndicator(high=previous_df["high"], low=previous_df["low"], close= previous_df["close"]).psar_up()
+                    previous_df['psar_up_indicator']= ta.trend.PSARIndicator(high=previous_df["high"], low=previous_df["low"], close= previous_df["close"]).psar_up_indicator()
+
+                    symbols_return[pattern]={
+                            'value':{
+                                'psar':df.iloc[-1]['psar'],
+                                'psar_down':df.iloc[-1]['psar_down'],
+                                'psar_down_indicator':df.iloc[-1]['psar_down_indicator'],
+                                'psar_up':df.iloc[-1]['psar_up'],
+                                'psar_up_indicator':df.iloc[-1]['psar_up_indicator'],
+                            },
+                            'previous':{
+                                'psar':previous_df.iloc[-1]['psar'],
+                                'psar_down':previous_df.iloc[-1]['psar_down'],
+                                'psar_down_indicator':previous_df.iloc[-1]['psar_down_indicator'],
+                                'psar_up':previous_df.iloc[-1]['psar_up'],
+                                'psar_up_indicator':previous_df.iloc[-1]['psar_up_indicator'],
+                                
+                            },
+                            'last_update': df.iloc[-1]['date'],
+                            'last_price': df.iloc[-1]['close'],
+                    }
 
 
                 # except NameError:
@@ -739,7 +772,7 @@ class IndicatorUpdate(threading.Thread):
 
     def load_machines(self):
         
-        patterns = ["stoch_signal","StochasticOscillator","ichimoku","historical_price","rsi","macd","uo","roc","ema-10","ema-20","ema-50","ema-100","ema-200","sma-10","sma-20","sma-50","sma-100","sma-200","stoch","adx","cci-20","chaikin-money-flow","stoch-rsi","williams","atr-14","money-flow-index"]
+        patterns = ["PSAR","stoch_signal","StochasticOscillator","ichimoku","historical_price","rsi","macd","uo","roc","ema-10","ema-20","ema-50","ema-100","ema-200","sma-10","sma-20","sma-50","sma-100","sma-200","stoch","adx","cci-20","chaikin-money-flow","stoch-rsi","williams","atr-14","money-flow-index"]
 
         allSymbols=self.getSymbols()
         
@@ -773,14 +806,18 @@ class IndicatorUpdate(threading.Thread):
         # else:
         
 
-    
-        sql = "UPDATE `stock_params` SET `stoch_signal`=%s, `StochasticOscillator`=%s ,`adx_positive`=%s, `adx_negative`=%s ,`ichimoku_a`=%s, `ichimoku_b`=%s , `ichimoku_base_line`=%s , `ichimoku_conversion_line`=%s , `historical_low`=%s,`historical_high`=%s,`historical_low_date`=%s,`historical_high_date`=%s,`rsi`=%s,`macd`=%s,`Signal_Line`=%s,`MACD_Line`=%s,`uo`=%s,`roc`=%s,`ema_10`=%s,`ema_20`=%s,`ema_50`=%s,`ema_100`=%s,`ema_200`=%s,`sma_10`=%s,`sma_20`=%s,`sma_50`=%s,`sma_100`=%s,`sma_200`=%s,`stoch`=%s,`adx`=%s,`cci_20`=%s,`chaikin_money_flow`=%s,`stoch_rsi`=%s,`williams`=%s,`atr_14`=%s,`money_flow_index`=%s WHERE `Inscode`=%s"
+        sql = "UPDATE `stock_params` SET `stoch_signal`=%s, `StochasticOscillator`=%s,`psar`=%s,`psar_down`=%s,`psar_down_indicator`=%s,`psar_up`=%s,`psar_up_indicator`=%s,`adx_positive`=%s, `adx_negative`=%s ,`ichimoku_a`=%s, `ichimoku_b`=%s , `ichimoku_base_line`=%s , `ichimoku_conversion_line`=%s , `historical_low`=%s,`historical_high`=%s,`historical_low_date`=%s,`historical_high_date`=%s,`rsi`=%s,`macd`=%s,`Signal_Line`=%s,`MACD_Line`=%s,`uo`=%s,`roc`=%s,`ema_10`=%s,`ema_20`=%s,`ema_50`=%s,`ema_100`=%s,`ema_200`=%s,`sma_10`=%s,`sma_20`=%s,`sma_50`=%s,`sma_100`=%s,`sma_200`=%s,`stoch`=%s,`adx`=%s,`cci_20`=%s,`chaikin_money_flow`=%s,`stoch_rsi`=%s,`williams`=%s,`atr_14`=%s,`money_flow_index`=%s WHERE `Inscode`=%s"
 
         mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
         val = (
             float(symbols_return['StochasticOscillator']['value']['stoch_signal']) if not math.isnan(symbols_return['StochasticOscillator']['value']['stoch_signal']) and not math.isinf(symbols_return['StochasticOscillator']['value']['stoch_signal']) else 0,
             float(symbols_return['StochasticOscillator']['value']['StochasticOscillator']) if not math.isnan(symbols_return['StochasticOscillator']['value']['StochasticOscillator']) and not math.isinf(symbols_return['StochasticOscillator']['value']['StochasticOscillator']) else 0,
-            
+
+            float(symbols_return['PSAR']['value']['psar']) if not math.isnan(symbols_return['PSAR']['value']['psar']) and not math.isinf(symbols_return['PSAR']['value']['psar']) else 0,
+            float(symbols_return['PSAR']['value']['psar_down']) if not math.isnan(symbols_return['PSAR']['value']['psar_down']) and not math.isinf(symbols_return['PSAR']['value']['psar_down']) else 0,
+            float(symbols_return['PSAR']['value']['psar_down_indicator']) if not math.isnan(symbols_return['PSAR']['value']['psar_down_indicator']) and not math.isinf(symbols_return['PSAR']['value']['psar_down_indicator']) else 0,
+            float(symbols_return['PSAR']['value']['psar_up']) if not math.isnan(symbols_return['PSAR']['value']['psar_up']) and not math.isinf(symbols_return['PSAR']['value']['psar_up']) else 0,
+            float(symbols_return['PSAR']['value']['psar_up_indicator']) if not math.isnan(symbols_return['PSAR']['value']['psar_up_indicator']) and not math.isinf(symbols_return['PSAR']['value']['psar_up_indicator']) else 0,
             
             float(symbols_return['adx']['value']['adx_positive']) if not math.isnan(symbols_return['adx']['value']['adx_positive']) and not math.isinf(symbols_return['adx']['value']['adx_positive']) else 0,
             float(symbols_return['adx']['value']['adx_negative']) if not math.isnan(symbols_return['adx']['value']['adx_negative']) and not math.isinf(symbols_return['adx']['value']['adx_negative']) else 0,
@@ -831,7 +868,7 @@ class IndicatorUpdate(threading.Thread):
         try:
             if(mycursor.rowcount==0):
                 
-                sql ="INSERT INTO `stock_params` (`stoch_signal`,`StochasticOscillator`,`adx_positive`, `adx_negative` ,`ichimoku_a`, `ichimoku_b`, `ichimoku_base_line`, `ichimoku_conversion_line`,`historical_low`,`historical_high`,`historical_low_date`,`historical_high_date`,`rsi`, `macd`,`Signal_Line`,`MACD_Line`, `uo`, `roc`, `ema_10`, `ema_20`, `ema_50`, `ema_100`, `ema_200`, `sma_10`, `sma_20`, `sma_50`, `sma_100`, `sma_200`, `stoch`, `adx`, `cci_20`, `chaikin_money_flow`, `stoch_rsi`, `williams`, `atr_14`, `money_flow_index`,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                sql ="INSERT INTO `stock_params` (`stoch_signal`,`StochasticOscillator`,`psar`,`psar_down`,`psar_down_indicator`,`psar_up`,`psar_up_indicator`,`adx_positive`, `adx_negative` ,`ichimoku_a`, `ichimoku_b`, `ichimoku_base_line`, `ichimoku_conversion_line`,`historical_low`,`historical_high`,`historical_low_date`,`historical_high_date`,`rsi`, `macd`,`Signal_Line`,`MACD_Line`, `uo`, `roc`, `ema_10`, `ema_20`, `ema_50`, `ema_100`, `ema_200`, `sma_10`, `sma_20`, `sma_50`, `sma_100`, `sma_200`, `stoch`, `adx`, `cci_20`, `chaikin_money_flow`, `stoch_rsi`, `williams`, `atr_14`, `money_flow_index`,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                 r=mycursor.execute(sql, val)
                 mydb.commit()
                 print("Inserted")
