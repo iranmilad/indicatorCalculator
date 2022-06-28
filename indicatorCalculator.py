@@ -774,7 +774,7 @@ class IndicatorUpdate(threading.Thread):
         
 
     
-        sql = "UPDATE `stock_params` SET `stoch_signal`=%s, `StochasticOscillator`=%s ,`adx_positive`=%s, `adx_negative`=%s ,`ichimoku_a`=%s, `ichimoku_b`=%s , `ichimoku_base_line`=%s , `ichimoku_conversion_line`=%s , `historical_low`=%s,`historical_high`=%s,`historical_low_date`=%s,`historical_high_date`=%s,`rsi`=%s,`macd`=%s,`uo`=%s,`roc`=%s,`ema_10`=%s,`ema_20`=%s,`ema_50`=%s,`ema_100`=%s,`ema_200`=%s,`sma_10`=%s,`sma_20`=%s,`sma_50`=%s,`sma_100`=%s,`sma_200`=%s,`stoch`=%s,`adx`=%s,`cci_20`=%s,`chaikin_money_flow`=%s,`stoch_rsi`=%s,`williams`=%s,`atr_14`=%s,`money_flow_index`=%s WHERE `Inscode`=%s"
+        sql = "UPDATE `stock_params` SET `stoch_signal`=%s, `StochasticOscillator`=%s ,`adx_positive`=%s, `adx_negative`=%s ,`ichimoku_a`=%s, `ichimoku_b`=%s , `ichimoku_base_line`=%s , `ichimoku_conversion_line`=%s , `historical_low`=%s,`historical_high`=%s,`historical_low_date`=%s,`historical_high_date`=%s,`rsi`=%s,`macd`=%s,`Signal_Line`=%s,`MACD_Line`=%s,`uo`=%s,`roc`=%s,`ema_10`=%s,`ema_20`=%s,`ema_50`=%s,`ema_100`=%s,`ema_200`=%s,`sma_10`=%s,`sma_20`=%s,`sma_50`=%s,`sma_100`=%s,`sma_200`=%s,`stoch`=%s,`adx`=%s,`cci_20`=%s,`chaikin_money_flow`=%s,`stoch_rsi`=%s,`williams`=%s,`atr_14`=%s,`money_flow_index`=%s WHERE `Inscode`=%s"
 
         mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
         val = (
@@ -796,7 +796,11 @@ class IndicatorUpdate(threading.Thread):
             (symbols_return['historical_price']['value']['date_low']),
             (symbols_return['historical_price']['value']['date_high']),
             float(symbols_return['rsi']['value']['RSI']) if not math.isnan(symbols_return['rsi']['value']['RSI']) and not math.isinf(symbols_return['rsi']['value']['RSI']) else 0,
+            
             float(symbols_return['macd']['value']['MACD-Histogram']) if not math.isnan(symbols_return['macd']['value']['MACD-Histogram']) and not math.isinf(symbols_return['macd']['value']['MACD-Histogram']) else 0,
+            float(symbols_return['macd']['value']['Signal-Line']) if not math.isnan(symbols_return['macd']['value']['Signal-Line']) and not math.isinf(symbols_return['macd']['value']['Signal-Line']) else 0,
+            float(symbols_return['macd']['value']['MACD-Line']) if not math.isnan(symbols_return['macd']['value']['MACD-Line']) and not math.isinf(symbols_return['macd']['value']['MACD-Line']) else 0,
+            
             float(symbols_return['uo']['value']['uo']) if not math.isnan(symbols_return['uo']['value']['uo']) and not math.isinf(symbols_return['uo']['value']['uo']) else 0, 
             float(symbols_return['roc']['value']['roc']) if not math.isnan(symbols_return['roc']['value']['roc']) and not math.isinf(symbols_return['roc']['value']['roc']) else 0,
             float(symbols_return['ema-10']['value']) if not math.isnan(symbols_return['ema-10']['value']) and not math.isinf(symbols_return['ema-10']['value']) else 0,
@@ -826,7 +830,8 @@ class IndicatorUpdate(threading.Thread):
         mydb.commit()
         try:
             if(mycursor.rowcount==0):
-                sql ="INSERT INTO `stock_params` (`stoch_signal`,`StochasticOscillator`,`adx_positive`, `adx_negative` ,`ichimoku_a`, `ichimoku_b`, `ichimoku_base_line`, `ichimoku_conversion_line`,`historical_low`,`historical_high`,`historical_low_date`,`historical_high_date`,`rsi`, `macd`, `uo`, `roc`, `ema_10`, `ema_20`, `ema_50`, `ema_100`, `ema_200`, `sma_10`, `sma_20`, `sma_50`, `sma_100`, `sma_200`, `stoch`, `adx`, `cci_20`, `chaikin_money_flow`, `stoch_rsi`, `williams`, `atr_14`, `money_flow_index`,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                
+                sql ="INSERT INTO `stock_params` (`stoch_signal`,`StochasticOscillator`,`adx_positive`, `adx_negative` ,`ichimoku_a`, `ichimoku_b`, `ichimoku_base_line`, `ichimoku_conversion_line`,`historical_low`,`historical_high`,`historical_low_date`,`historical_high_date`,`rsi`, `macd`,`Signal_Line`,`MACD_Line`, `uo`, `roc`, `ema_10`, `ema_20`, `ema_50`, `ema_100`, `ema_200`, `sma_10`, `sma_20`, `sma_50`, `sma_100`, `sma_200`, `stoch`, `adx`, `cci_20`, `chaikin_money_flow`, `stoch_rsi`, `williams`, `atr_14`, `money_flow_index`,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                 r=mycursor.execute(sql, val)
                 mydb.commit()
                 print("Inserted")
