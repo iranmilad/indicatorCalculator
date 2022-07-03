@@ -9,6 +9,8 @@ import requests
 import sys, os
 import _thread
 import mysql.connector
+import xmltodict
+import math
 from datetime import datetime
 
 class IndicatorUpdate(threading.Thread):
@@ -23,11 +25,11 @@ class IndicatorUpdate(threading.Thread):
         self.password_price_server='6$gtA453'
         self.mysqluser='root'
         self.mySqlHost='localhost'
-        self.mySqlDBName='screener'
-        self.forex_symbol=self.getExchangeSymbols('IB')
-        self.crypto_symbol=self.getExchangeSymbols('Binance')
-        self.primary_nasdaq=self.getExchangeSymbols('Nasdaq')
-        self.primary_nyse=self.getExchangeSymbols('Nyse')
+        self.mySqlDBName='stockfeeder'
+        # self.forex_symbol=self.getExchangeSymbols('IB')
+        # self.crypto_symbol=self.getExchangeSymbols('Binance')
+        # self.primary_nasdaq=self.getExchangeSymbols('Nasdaq')
+        # self.primary_nyse=self.getExchangeSymbols('Nyse')
         #self.q=q
 
     # def run(self):
@@ -37,83 +39,177 @@ class IndicatorUpdate(threading.Thread):
 
 
     def get_database_number(self,interval):
-            return 14
+            return 10
           
     def connect_to_mysql(self):
         # Connecting from the server
         conn = mysql.connector.connect(user = 'root',
                                     host = 'localhost',
-                                    database = 'screener')
+                                    database = 'stockfeeder')
         return conn
 
-    def calculate_indicator(self,symbols,interval):
+    def calculate_indicator(self,symbols,patterns,interval):
         start_time = time.time()
-        database=self.get_database_number(interval)
 
-        r = redis.Redis(host=self.host_price_server, port=self.port_price_server ,password =self.password_price_server , db=database)
-        symbols_return={"crypto":[],"forex":[],"stock":[]}
 
+
+        symbols_return={}
 
         for symbol in symbols:
 
-            try:
-                if not r.exists(symbol):
-                    print("symbol is not exist in %s "%(symbol))
-                    continue
-                price_data=r.get(symbol)
-
-                if price_data:
-                    series_buffer=json.loads(price_data)[0]
-                    #print(series_buffer)
-                else:
-                    print ("key Symbol %s not string in timeframe %s" %(symbol,interval))
-                    print ("import is  %s with type %s" %(price_data,type(price_data)))
-                    continue
-            except:
-                print("connection problem to get symbol %s"%(symbol))
+            r = self.get_data(symbol)
+            # try:
+            if not symbol in r.keys():
+                print("symbol is not exist in %s "%(symbol))
                 continue
+            price_data=r[symbol]
+            series_buffer=price_data
+            #     if price_data:
+            #         series_buffer=json.loads(price_data)
+            #         #print(series_buffer)
+            #     else:
+            #         print ("key Symbol %s not string in timeframe %s" %(symbol,interval))
+            #         print ("import is  %s with type %s" %(price_data,type(price_data)))
+            #         continue
+            # except:
+            #     print("connection problem to get symbol %s"%(symbol))
+            #     continue
 
 
             if len(series_buffer)==0:
                 print ("Symbol %s is null in timeframe %s" %(symbol,interval))
                 continue
 
-            if symbol in self.crypto_symbol:
-                symbols_return["crypto"].append({
-                    "symbol" : symbol,
-                    "current_price": series_buffer['close'],
-                    "previous_price" : series_buffer['prevClose'],
-                    "price_change": round(((series_buffer['close']-series_buffer['prevClose'])/series_buffer['prevClose'])*100,1) ,
-                    "volume" : series_buffer['volume'],
-                })
-            elif symbol in self.forex_symbol:
-                symbols_return["forex"].append({
-                    "symbol" : symbol,
-                    "current_price": series_buffer['close'],
-                    "previous_price" : series_buffer['prevClose'],
-                    "price_change": round(((series_buffer['close']-series_buffer['prevClose'])/series_buffer['prevClose'])*100 ,3),
-                    "volume" : series_buffer['volume'],
-                })
+            series_buffer.reverse()
+            df = pd.DataFrame(series_buffer[:-1])
+            #df = ta.utils.dropna(df)
+            previous_df=pd.DataFrame(series_buffer[:-2])
+            if len(df)<=210 or len(previous_df)<=201:
+                continue
+            for pattern in patterns:
+
+ 
+                #try:
+
+                if pattern=="rate_of_return":
+                    df['1']=(df.iloc[-1]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
+                    df['5']=(df.iloc[-5]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
+                    df['10']=(df.iloc[-10]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
+                    df['20']= (df.iloc[-20]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
+                    df['50']= (df.iloc[-50]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
+                    df['100']= (df.iloc[-100]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
+                    df['200']= (df.iloc[-200]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
+                    
+
+                    previous_df['1']= (previous_df.iloc[-1]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
+                    previous_df['5']= (previous_df.iloc[-5]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
+                    previous_df['10']= (previous_df.iloc[-10]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
+                    previous_df['20']= (previous_df.iloc[-20]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
+                    previous_df['50']= (previous_df.iloc[-50]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
+                    previous_df['100']= (previous_df.iloc[-100]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
+                    previous_df['200']= (previous_df.iloc[-200]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
+                    
+                    symbols_return[pattern]={
+                            'value':{
+                                '1':df.iloc[-1]['1'],
+                                '5':df.iloc[-1]['5'],
+                                '10':df.iloc[-1]['10'],
+                                '20':df.iloc[-1]['20'],
+                                '50':df.iloc[-1]['50'],
+                                '100':df.iloc[-1]['100'],
+                                '200':df.iloc[-1]['200']
+                            },
+                            'previous':{
+                                '1':previous_df.iloc[-1]['1'],
+                                '5':previous_df.iloc[-1]['5'],
+                                '10':previous_df.iloc[-1]['10'],
+                                '20':previous_df.iloc[-1]['20'],
+                                '50':previous_df.iloc[-1]['50'],
+                                '100':previous_df.iloc[-1]['100'],
+                                '200':previous_df.iloc[-1]['200']
+                            },
+                            'last_update': df.iloc[-1]['date'],
+                            'last_price': df.iloc[-1]['close'],
+                    }
+
+
+
+
+            if symbols_return:
+
+                self.update_key(symbol,symbols_return)
+                print("%s updated" %symbol)
             else:
-                symbols_return["stock"].append({
-                    "symbol" : symbol,
-                    "current_price": series_buffer['close'],
-                    "previous_price" : series_buffer['prevClose'],
-                    "price_change": round(((series_buffer['close']-series_buffer['prevClose'])/series_buffer['prevClose'])*100,1) ,
-                    "volume" : series_buffer['volume'],
-                })
+                print('symbols is none')
 
-        if symbols_return:
 
-            self.update_key(symbols_return)
-            print("%s updated" %symbol)
-        else:
-            print('symbols is none')
+        print("%s --- %s seconds ---" % (time.strftime("%a, %d %b %Y %H:%M:%S", time.gmtime()),(time.time() - start_time)))
 
-        r.connection_pool.disconnect()
+    def get_data(self,Inscode):
+        main_dict = {}
+        username = "idenegar.com"
+        password = "!D3n3g@r.C0m"
+        url = "http://service.tsetmc.com/WebService/TsePublicV2.asmx"
+        headers = {
+        'Content-Type': 'application/soap+xml; charset=utf-8',
+        'Host': 'service.tsetmc.com'
+        }
         
-
+        payload = f"""<?xml version="1.0" encoding="utf-8"?>
+        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+        <soap12:Body>
+        <InstTrade xmlns="http://tsetmc.com/">
+            <UserName>{username}</UserName>
+            <Password>{password}</Password>
+            <Inscode>{Inscode}</Inscode>
+            <DateFrom>20200601</DateFrom>
+            <DateTo>20220621</DateTo>
+            </InstTrade>
+        </soap12:Body>
+        </soap12:Envelope>"""     
+        while True:
+            try:
+                response = requests.post(url, headers=headers, data=payload)
+                all = xmltodict.parse(response.text)
+                diffgr = all['soap:Envelope']['soap:Body']['InstTradeResponse']['InstTradeResult']['diffgr:diffgram']['TradeSelectedDate']['TradeSelectedDate']
+                break
+            except:
+                print('ib connection error')
+                #print(response.text)
+                time.sleep(1)
+                continue
+        main_dict[Inscode]=[]
+        for i in diffgr:
+            if float(i['PriceMin'])<=0:
+                continue
+            InsCode = i['InsCode']
+            re_json = {
+                "date": i['DEven'],
+                "HEven": i['HEven'],
+                "close": float(i['PClosing']),
+                "IClose": float(i['IClose']),
+                "YClose": float(i['YClose']),
+                "PDrCotVal": float(i['PDrCotVal']),
+                "ZTotTran": float(i['ZTotTran']),
+                "volume": int(i['QTotTran5J']),
+                "QTotCap": float(i['QTotCap']),
+                "PriceChange": float(i['PriceChange']),
+                "low": float(i['PriceMin']),
+                "high": float(i['PriceMax']),
+                "PriceYesterday": float(i['PriceYesterday']),
+                "open": float(i['PriceFirst']),
+                
+            }
+            if InsCode not in main_dict.keys():
+                main_dict[Inscode] = []
+            main_dict[InsCode].append(re_json)    
+            
+        return main_dict
+                           
     def getSymbols(self):
+        return self.getExchangeSymbols("tsetmc")
+        
+        return {"5054819322815158"}
         url = 'https://panel.scanical.com/api/symbols/snapshot'
         try:
             x = requests.get(url)
@@ -129,68 +225,69 @@ class IndicatorUpdate(threading.Thread):
         return responses
 
     def load_machines(self):
+        
+        patterns = ["rate_of_return"]
 
-        symbols=self.getSymbols()
-
-        self.calculate_indicator(symbols,"1d")
-
+        allSymbols=self.getSymbols()
+        
+        for symbols in zip(*(iter(allSymbols),) * 20):
+            self.calculate_indicator(symbols,patterns,"1d")
+            print('sleep')
+            time.sleep(60)
+            
+        
     def getExchangeSymbols(self,exchange):
-        url = 'https://panel.scanical.com/api/exchangesymbols/'+exchange
+        url = 'https://feed.tseshow.com/api/stockInSector'
         try:
-            x = requests.get(url)
-            return x.json()
+            x = requests.get(url, verify=False)
+ 
+            x = json.loads(x.text)
+            x= x['data']
         except:
             return []
-  
-    def update_key(self,symbols_return):
-        sql=''
+        symbols=[]
+        for (key,val) in x.items():
+            if val["YVal"]=="300":
+                symbols.append(key)
+                        
+        return symbols
+    
+    def update_key(self,symbol,symbols_return):
+        # if symbol in self.crypto_symbol:
+        #     sql = "UPDATE `crypto_indicators` SET `rsi`=%s,`macd`=%s,`uo`=%s,`roc`=%s,`ema-10`=%s,`ema-20`=%s,`ema-50`=%s,`ema-100`=%s,`ema-200`=%s,`sma-10`=%s,`sma-20`=%s,`sma-50`=%s,`sma-100`=%s,`sma-200`=%s,`stoch`=%s,`adx`=%s,`cci-20`=%s,`chaikin-money-flow`=%s,`stoch-rsi`=%s,`williams`=%s,`atr-14`=%s,`money-flow-index`=%s WHERE `crypto_id`= (SELECT `id` From `cryptos` WHERE `symbol`=%s LIMIT 1)"
+        # elif symbol in self.forex_symbol:
+        #     sql = "UPDATE `currency_indicators` SET `rsi`=%s,`macd`=%s,`uo`=%s,`roc`=%s,`ema-10`=%s,`ema-20`=%s,`ema-50`=%s,`ema-100`=%s,`ema-200`=%s,`sma-10`=%s,`sma-20`=%s,`sma-50`=%s,`sma-100`=%s,`sma-200`=%s,`stoch`=%s,`adx`=%s,`cci-20`=%s,`chaikin-money-flow`=%s,`stoch-rsi`=%s,`williams`=%s,`atr-14`=%s,`money-flow-index`=%s WHERE `pair_id`= (SELECT `id` From `currencies` WHERE `pair`=%s LIMIT 1)"
+        # else:
+        
+
+        sql = "UPDATE `stock_rates` SET `rate_1`=%s,`rate_5`=%s, `rate_10`=%s, `rate_20`=%s, `rate_50`=%s , `rate_100`=%s, `rate_200`=%s  WHERE `Inscode`=%s "
+
         mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
+        val = (
+            float(symbols_return['rate_of_return']['value']['1']) if not math.isnan(symbols_return['rate_of_return']['value']['1']) and not math.isinf(symbols_return['rate_of_return']['value']['1']) else 0,
+            float(symbols_return['rate_of_return']['value']['5']) if not math.isnan(symbols_return['rate_of_return']['value']['5']) and not math.isinf(symbols_return['rate_of_return']['value']['5']) else 0,
+            float(symbols_return['rate_of_return']['value']['10']) if not math.isnan(symbols_return['rate_of_return']['value']['10']) and not math.isinf(symbols_return['rate_of_return']['value']['10']) else 0,
+            float(symbols_return['rate_of_return']['value']['20']) if not math.isnan(symbols_return['rate_of_return']['value']['20']) and not math.isinf(symbols_return['rate_of_return']['value']['20']) else 0,
+            float(symbols_return['rate_of_return']['value']['50']) if not math.isnan(symbols_return['rate_of_return']['value']['50']) and not math.isinf(symbols_return['rate_of_return']['value']['50']) else 0,
+            float(symbols_return['rate_of_return']['value']['100']) if not math.isnan(symbols_return['rate_of_return']['value']['100']) and not math.isinf(symbols_return['rate_of_return']['value']['100']) else 0,
+            float(symbols_return['rate_of_return']['value']['200']) if not math.isnan(symbols_return['rate_of_return']['value']['200']) and not math.isinf(symbols_return['rate_of_return']['value']['200']) else 0,
+            symbol
+        )
 
         mycursor = mydb.cursor()
-
-
-        for symbol in symbols_return["crypto"]:
-            sql = "UPDATE `cryptos` SET `volume`=%s,`previous_price`=%s,`current_price`=%s,`price_change`=%s WHERE `symbol`=%s;"
-            val = (
-                float(symbol['volume']),
-                float(symbol['previous_price']),
-                float(symbol['current_price']),
-                float(symbol['price_change']),                                             
-                symbol['symbol']
-            )
-            mycursor.execute(sql, val)
-            mydb.commit()
+        #print(sql%(val))
+        r=mycursor.execute(sql, val)
+        mydb.commit()
+        try:
+            if(mycursor.rowcount==0):
+                sql ="INSERT INTO `stock_rates` (`rate_1`, `rate_5`, `rate_10`, `rate_20`, `rate_50`, `rate_100`, `rate_200`,`Inscode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+                r=mycursor.execute(sql, val)
+                mydb.commit()
+                print("Inserted")
             print(mycursor.rowcount, "details inserted")
-
-
-
-        for symbol in symbols_return["forex"]:
-            sql = "UPDATE `currencies` SET `volume`=%s,`previous_price`=%s,`current_price`=%s,`price_change`=%s WHERE `pair`=%s;"
-            val = (
-                float(symbol['volume']),
-                float(symbol['previous_price']),
-                float(symbol['current_price']),
-                float(symbol['price_change']),                                             
-                symbol['symbol']
-            )
-            mycursor.execute(sql, val)
-            mydb.commit()
-            print(mycursor.rowcount, "details inserted")
-
-
-        for symbol in symbols_return["stock"]:
-            sql = "UPDATE `stocks` SET `volume`=%s,`previous_price`=%s,`current_price`=%s,`price_change`=%s WHERE `symbol`=%s;"
-            val = (
-                float(symbol['volume']),
-                float(symbol['previous_price']),
-                float(symbol['current_price']),
-                float(symbol['price_change']),                                             
-                symbol['symbol']
-            )
-            mycursor.execute(sql, val)
-            mydb.commit()
-            print(mycursor.rowcount, "details inserted")
-
+        except:
+            pass
+        
         mydb.close()
 
 
@@ -199,29 +296,33 @@ print('run service')
 
 q=queue.Queue()
 
+def now_time_run():
+    now = datetime.now()
+    time_tset_now = now.strftime("%H%M")
+    weekday=datetime.today().weekday()
+    print(time_tset_now)
+    s_t = "1600"
+    e_t = "1601"
+    if time_tset_now <e_t and time_tset_now >= s_t and weekday in [6,5,0,1,2]:
+        exit_run = False
+    else:
+        exit_run = True
+    return exit_run
 
 
 if __name__ == '__main__':
-
-    sleep_loop_time=90   
-    indicator=IndicatorUpdate()
-
-    while True:
+    try:
+        indicator=IndicatorUpdate()
+        while True:
+            while now_time_run():
+                print("Exit time")
+                time.sleep(60)
         
-        start_time = time.time()
-
-        try:
             indicator.load_machines()
-        except KeyboardInterrupt:
-            print('Interrupted')
-            try:
-                sys.exit(0)
-            except SystemExit:
-                os._exit(0)
-        
 
-        print("%s --- %s seconds ---" % (datetime.now(),time.time() - start_time))
-        
-        if sleep_loop_time-(time.time() - start_time)>0:
-            time.sleep(sleep_loop_time-(time.time() - start_time))
-
+    except KeyboardInterrupt:
+        print('Interrupted')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

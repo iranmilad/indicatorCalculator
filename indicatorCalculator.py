@@ -11,6 +11,7 @@ import _thread
 import mysql.connector
 import xmltodict
 import math
+from datetime import datetime
 
 class IndicatorUpdate(threading.Thread):
 
@@ -721,7 +722,7 @@ class IndicatorUpdate(threading.Thread):
                 break
             except:
                 print('ib connection error')
-                print(response.text)
+                #print(response.text)
                 time.sleep(1)
                 continue
         main_dict[Inscode]=[]
@@ -909,12 +910,28 @@ print('run service')
 
 q=queue.Queue()
 
-
+def now_time_run():
+    now = datetime.now()
+    time_tset_now = now.strftime("%H%M")
+    weekday=datetime.today().weekday()
+    print(time_tset_now)
+    s_t = "1301"
+    e_t = "1302"
+    if time_tset_now <e_t and time_tset_now >= s_t and weekday in [6,5,0,1,2]:
+        exit_run = False
+    else:
+        exit_run = True
+    return exit_run
 
 if __name__ == '__main__':
     try:
         indicator=IndicatorUpdate()
-        indicator.load_machines()
+        while True:
+            while now_time_run():
+                print("Exit time")
+                time.sleep(60)
+        
+            indicator.load_machines()
 
     except KeyboardInterrupt:
         print('Interrupted')
