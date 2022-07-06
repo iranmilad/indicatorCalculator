@@ -147,6 +147,8 @@ class IndicatorUpdate(threading.Thread):
 
     def get_data(self,Inscode):
         main_dict = {}
+        now = datetime.now()
+        time_tset_now = now.strftime("%Y%m%d")        
         username = "idenegar.com"
         password = "!D3n3g@r.C0m"
         url = "http://service.tsetmc.com/WebService/TsePublicV2.asmx"
@@ -163,7 +165,7 @@ class IndicatorUpdate(threading.Thread):
             <Password>{password}</Password>
             <Inscode>{Inscode}</Inscode>
             <DateFrom>20200601</DateFrom>
-            <DateTo>20220621</DateTo>
+            <DateTo>{time_tset_now}</DateTo>
             </InstTrade>
         </soap12:Body>
         </soap12:Envelope>"""     
