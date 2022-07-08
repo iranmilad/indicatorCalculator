@@ -131,7 +131,45 @@ class IndicatorUpdate(threading.Thread):
                             'last_update': df.iloc[-1]['date'],
                             'last_price': df.iloc[-1]['close'],
                     }
-
+                elif pattern=="avg_QTotCap":
+                    df['avg_QTotCap_1']=(df.iloc[-1]["QTotCap"]) / 1
+                    df['avg_QTotCap_5']=(df.iloc[-5:]["QTotCap"].sum()) / 5
+                    df['avg_QTotCap_10']=(df.iloc[-10:]["QTotCap"].sum()) / 10
+                    df['avg_QTotCap_20']=(df.iloc[-20:]["QTotCap"].sum()) / 20
+                    df['avg_QTotCap_50']=(df.iloc[-50:]["QTotCap"].sum()) / 50
+                    df['avg_QTotCap_100']=(df.iloc[-100:]["QTotCap"].sum()) / 100
+                    df['avg_QTotCap_200']=(df.iloc[-200:]["QTotCap"].sum()) / 200
+                    
+                    previous_df['avg_QTotCap_1']=(previous_df.iloc[-1]["QTotCap"]) / 1
+                    previous_df['avg_QTotCap_5']=(previous_df.iloc[-5:]["QTotCap"].sum()) / 5
+                    previous_df['avg_QTotCap_10']=(previous_df.iloc[-10:]["QTotCap"].sum()) / 10
+                    previous_df['avg_QTotCap_20']=(previous_df.iloc[-20:]["QTotCap"].sum()) / 20
+                    previous_df['avg_QTotCap_50']=(previous_df.iloc[-50:]["QTotCap"].sum()) / 50
+                    previous_df['avg_QTotCap_100']=(previous_df.iloc[-100:]["QTotCap"].sum()) / 100
+                    previous_df['avg_QTotCap_200']=(previous_df.iloc[-200:]["QTotCap"].sum()) / 200
+                    
+                    symbols_return[pattern]={
+                        'value':{
+                            '1':df.iloc[-1]['avg_QTotCap_1'],
+                            '5':df.iloc[-1]['avg_QTotCap_5'],
+                            '10':df.iloc[-1]['avg_QTotCap_10'],
+                            '20':df.iloc[-1]['avg_QTotCap_20'],
+                            '50':df.iloc[-1]['avg_QTotCap_50'],
+                            '100':df.iloc[-1]['avg_QTotCap_100'],
+                            '200':df.iloc[-1]['avg_QTotCap_200']
+                        },
+                        'previous':{
+                            '1':previous_df.iloc[-1]['avg_QTotCap_1'],
+                            '5':previous_df.iloc[-1]['avg_QTotCap_5'],
+                            '10':previous_df.iloc[-1]['avg_QTotCap_10'],
+                            '20':previous_df.iloc[-1]['avg_QTotCap_20'],
+                            '50':previous_df.iloc[-1]['avg_QTotCap_50'],
+                            '100':previous_df.iloc[-1]['avg_QTotCap_100'],
+                            '200':previous_df.iloc[-1]['avg_QTotCap_200']
+                        },
+                        'last_update': df.iloc[-1]['date'],
+                        'last_price': df.iloc[-1]['close'],
+                    }
 
 
 
@@ -228,7 +266,7 @@ class IndicatorUpdate(threading.Thread):
 
     def load_machines(self):
         
-        patterns = ["rate_of_return"]
+        patterns = ["rate_of_return","avg_QTotCap"]
 
         allSymbols=self.getSymbols()
         
@@ -261,8 +299,8 @@ class IndicatorUpdate(threading.Thread):
         #     sql = "UPDATE `currency_indicators` SET `rsi`=%s,`macd`=%s,`uo`=%s,`roc`=%s,`ema-10`=%s,`ema-20`=%s,`ema-50`=%s,`ema-100`=%s,`ema-200`=%s,`sma-10`=%s,`sma-20`=%s,`sma-50`=%s,`sma-100`=%s,`sma-200`=%s,`stoch`=%s,`adx`=%s,`cci-20`=%s,`chaikin-money-flow`=%s,`stoch-rsi`=%s,`williams`=%s,`atr-14`=%s,`money-flow-index`=%s WHERE `pair_id`= (SELECT `id` From `currencies` WHERE `pair`=%s LIMIT 1)"
         # else:
         
-
-        sql = "UPDATE `stock_rates` SET `rate_1`=%s,`rate_5`=%s, `rate_10`=%s, `rate_20`=%s, `rate_50`=%s , `rate_100`=%s, `rate_200`=%s  WHERE `Inscode`=%s "
+        
+        sql = "UPDATE `stock_rates` SET `rate_1`=%s,`rate_5`=%s, `rate_10`=%s, `rate_20`=%s, `rate_50`=%s , `rate_100`=%s, `rate_200`=%s,`avg_QTotCap_1`=%s, `avg_QTotCap_5`=%s , `avg_QTotCap_10`=%s, `avg_QTotCap_20`=%s,  `avg_QTotCap_50`=%s, `avg_QTotCap_100`=%s , `avg_QTotCap_200`=%s WHERE `Inscode`=%s "
 
         mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
         val = (
@@ -273,6 +311,14 @@ class IndicatorUpdate(threading.Thread):
             float(symbols_return['rate_of_return']['value']['50']) if not math.isnan(symbols_return['rate_of_return']['value']['50']) and not math.isinf(symbols_return['rate_of_return']['value']['50']) else 0,
             float(symbols_return['rate_of_return']['value']['100']) if not math.isnan(symbols_return['rate_of_return']['value']['100']) and not math.isinf(symbols_return['rate_of_return']['value']['100']) else 0,
             float(symbols_return['rate_of_return']['value']['200']) if not math.isnan(symbols_return['rate_of_return']['value']['200']) and not math.isinf(symbols_return['rate_of_return']['value']['200']) else 0,
+            float(symbols_return['avg_QTotCap']['value']['1']) if not math.isnan(symbols_return['avg_QTotCap']['value']['1']) and not math.isinf(symbols_return['avg_QTotCap']['value']['1']) else 0,
+            float(symbols_return['avg_QTotCap']['value']['5']) if not math.isnan(symbols_return['avg_QTotCap']['value']['5']) and not math.isinf(symbols_return['avg_QTotCap']['value']['5']) else 0,
+            float(symbols_return['avg_QTotCap']['value']['10']) if not math.isnan(symbols_return['avg_QTotCap']['value']['10']) and not math.isinf(symbols_return['avg_QTotCap']['value']['10']) else 0,
+            float(symbols_return['avg_QTotCap']['value']['20']) if not math.isnan(symbols_return['avg_QTotCap']['value']['20']) and not math.isinf(symbols_return['avg_QTotCap']['value']['20']) else 0,
+            float(symbols_return['avg_QTotCap']['value']['50']) if not math.isnan(symbols_return['avg_QTotCap']['value']['50']) and not math.isinf(symbols_return['avg_QTotCap']['value']['50']) else 0,
+            float(symbols_return['avg_QTotCap']['value']['100']) if not math.isnan(symbols_return['avg_QTotCap']['value']['100']) and not math.isinf(symbols_return['avg_QTotCap']['value']['100']) else 0,
+            float(symbols_return['avg_QTotCap']['value']['200']) if not math.isnan(symbols_return['avg_QTotCap']['value']['200']) and not math.isinf(symbols_return['avg_QTotCap']['value']['200']) else 0,
+            
             symbol
         )
 
@@ -282,7 +328,7 @@ class IndicatorUpdate(threading.Thread):
         mydb.commit()
         try:
             if(mycursor.rowcount==0):
-                sql ="INSERT INTO `stock_rates` (`rate_1`, `rate_5`, `rate_10`, `rate_20`, `rate_50`, `rate_100`, `rate_200`,`Inscode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+                sql ="INSERT INTO `stock_rates` (`rate_1`, `rate_5`, `rate_10`, `rate_20`, `rate_50`, `rate_100`, `rate_200`,`avg_QTotCap_1`, `avg_QTotCap_5` , `avg_QTotCap_10`, `avg_QTotCap_20`,  `avg_QTotCap_50`, `avg_QTotCap_100` , `avg_QTotCap_200`,`Inscode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                 r=mycursor.execute(sql, val)
                 mydb.commit()
                 print("Inserted")
@@ -318,6 +364,7 @@ if __name__ == '__main__':
         while True:
             while now_time_run():
                 print("Exit time")
+                #break
                 time.sleep(60)
         
             indicator.load_machines()
