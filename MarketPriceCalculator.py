@@ -310,6 +310,7 @@ class IndicatorUpdate(threading.Thread):
                 "IClose": float(i['IClose']),
                 "YClose": float(i['YClose']),
                 "PDrCotVal": float(i['PDrCotVal']),
+                "QTotTran5J": float(i['QTotTran5J']),
                 "ZTotTran": float(i['ZTotTran']),
                 "volume": int(i['QTotTran5J']),
                 "QTotCap": float(i['QTotCap']),
