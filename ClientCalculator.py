@@ -414,7 +414,13 @@ class IndicatorUpdate(threading.Thread):
             float(symbols_return['powerBuy']['value']['50']) if not math.isnan(symbols_return['powerBuy']['value']['50']) and not math.isinf(symbols_return['powerBuy']['value']['50']) else 0,
             float(symbols_return['powerBuy']['value']['100']) if not math.isnan(symbols_return['powerBuy']['value']['100']) and not math.isinf(symbols_return['powerBuy']['value']['100']) else 0,
             float(symbols_return['powerBuy']['value']['200']) if not math.isnan(symbols_return['powerBuy']['value']['200']) and not math.isinf(symbols_return['powerBuy']['value']['200']) else 0,
-                
+            float(symbols_return['moneyEnter']['value']['1']) if not math.isnan(symbols_return['moneyEnter']['value']['1']) and not math.isinf(symbols_return['moneyEnter']['value']['1']) else 0,
+            float(symbols_return['moneyEnter']['value']['5']) if not math.isnan(symbols_return['moneyEnter']['value']['5']) and not math.isinf(symbols_return['moneyEnter']['value']['5']) else 0,
+            float(symbols_return['moneyEnter']['value']['10']) if not math.isnan(symbols_return['moneyEnter']['value']['10']) and not math.isinf(symbols_return['moneyEnter']['value']['10']) else 0,
+            float(symbols_return['moneyEnter']['value']['20']) if not math.isnan(symbols_return['moneyEnter']['value']['20']) and not math.isinf(symbols_return['moneyEnter']['value']['20']) else 0,
+            float(symbols_return['moneyEnter']['value']['50']) if not math.isnan(symbols_return['moneyEnter']['value']['50']) and not math.isinf(symbols_return['moneyEnter']['value']['50']) else 0,
+            float(symbols_return['moneyEnter']['value']['100']) if not math.isnan(symbols_return['moneyEnter']['value']['100']) and not math.isinf(symbols_return['moneyEnter']['value']['100']) else 0,
+            float(symbols_return['moneyEnter']['value']['200']) if not math.isnan(symbols_return['moneyEnter']['value']['200']) and not math.isinf(symbols_return['moneyEnter']['value']['200']) else 0,     
                 
                 
             symbol
@@ -450,7 +456,7 @@ def now_time_run():
     weekday=datetime.today().weekday()
     print(time_tset_now)
     s_t = "1431"
-    e_t = "1432"
+    e_t = "2132"
     if time_tset_now <e_t and time_tset_now >= s_t and weekday in [6,5,0,1,2]:
         exit_run = False
     else:
