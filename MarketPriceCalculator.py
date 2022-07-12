@@ -452,7 +452,7 @@ def now_time_run():
     weekday=datetime.today().weekday()
     print(time_tset_now)
     s_t = "1600"
-    e_t = "2301"
+    e_t = "1601"
     if time_tset_now <e_t and time_tset_now >= s_t and weekday in [6,5,0,1,2]:
         exit_run = False
     else:
