@@ -170,7 +170,87 @@ class IndicatorUpdate(threading.Thread):
                         'last_update': df.iloc[-1]['date'],
                         'last_price': df.iloc[-1]['close'],
                     }
-
+                elif pattern=="avg_QTotTran5J":
+                    df['avg_QTotTran5J_1']=(df.iloc[-1]["QTotTran5J"]) / 1
+                    df['avg_QTotTran5J_5']=(df.iloc[-5:]["QTotTran5J"].sum()) / 5
+                    df['avg_QTotTran5J_10']=(df.iloc[-10:]["QTotTran5J"].sum()) / 10
+                    df['avg_QTotTran5J_20']=(df.iloc[-20:]["QTotTran5J"].sum()) / 20
+                    df['avg_QTotTran5J_50']=(df.iloc[-50:]["QTotTran5J"].sum()) / 50
+                    df['avg_QTotTran5J_100']=(df.iloc[-100:]["QTotTran5J"].sum()) / 100
+                    df['avg_QTotTran5J_200']=(df.iloc[-200:]["QTotTran5J"].sum()) / 200
+                    
+                    previous_df['avg_QTotTran5J_1']=(previous_df.iloc[-1]["QTotTran5J"]) / 1
+                    previous_df['avg_QTotTran5J_5']=(previous_df.iloc[-5:]["QTotTran5J"].sum()) / 5
+                    previous_df['avg_QTotTran5J_10']=(previous_df.iloc[-10:]["QTotTran5J"].sum()) / 10
+                    previous_df['avg_QTotTran5J_20']=(previous_df.iloc[-20:]["QTotTran5J"].sum()) / 20
+                    previous_df['avg_QTotTran5J_50']=(previous_df.iloc[-50:]["QTotTran5J"].sum()) / 50
+                    previous_df['avg_QTotTran5J_100']=(previous_df.iloc[-100:]["QTotTran5J"].sum()) / 100
+                    previous_df['avg_QTotTran5J_200']=(previous_df.iloc[-200:]["QTotTran5J"].sum()) / 200
+                    
+                    symbols_return[pattern]={
+                        'value':{
+                            '1':df.iloc[-1]['avg_QTotTran5J_1'],
+                            '5':df.iloc[-1]['avg_QTotTran5J_5'],
+                            '10':df.iloc[-1]['avg_QTotTran5J_10'],
+                            '20':df.iloc[-1]['avg_QTotTran5J_20'],
+                            '50':df.iloc[-1]['avg_QTotTran5J_50'],
+                            '100':df.iloc[-1]['avg_QTotTran5J_100'],
+                            '200':df.iloc[-1]['avg_QTotTran5J_200']
+                        },
+                        'previous':{
+                            '1':previous_df.iloc[-1]['avg_QTotTran5J_1'],
+                            '5':previous_df.iloc[-1]['avg_QTotTran5J_5'],
+                            '10':previous_df.iloc[-1]['avg_QTotTran5J_10'],
+                            '20':previous_df.iloc[-1]['avg_QTotTran5J_20'],
+                            '50':previous_df.iloc[-1]['avg_QTotTran5J_50'],
+                            '100':previous_df.iloc[-1]['avg_QTotTran5J_100'],
+                            '200':previous_df.iloc[-1]['avg_QTotTran5J_200']
+                        },
+                        'last_update': df.iloc[-1]['date'],
+                        'last_price': df.iloc[-1]['close'],
+                    }
+                elif pattern=="avg_ZTotTran": #average of total transactions per day
+                    df['avg_ZTotTran_1']=(df.iloc[-1]["ZTotTran"]) / 1
+                    df['avg_ZTotTran_5']=(df.iloc[-5:]["ZTotTran"].sum()) / 5
+                    df['avg_ZTotTran_10']=(df.iloc[-10:]["ZTotTran"].sum()) / 10
+                    df['avg_ZTotTran_20']=(df.iloc[-20:]["ZTotTran"].sum()) / 20
+                    df['avg_ZTotTran_50']=(df.iloc[-50:]["ZTotTran"].sum()) / 50
+                    df['avg_ZTotTran_100']=(df.iloc[-100:]["ZTotTran"].sum()) / 100
+                    df['avg_ZTotTran_200']=(df.iloc[-200:]["ZTotTran"].sum()) / 200
+                    
+                    previous_df['avg_ZTotTran_1']=(previous_df.iloc[-1]["ZTotTran"]) / 1
+                    previous_df['avg_ZTotTran_5']=(previous_df.iloc[-5:]["ZTotTran"].sum()) / 5
+                    previous_df['avg_ZTotTran_10']=(previous_df.iloc[-10:]["ZTotTran"].sum()) / 10
+                    previous_df['avg_ZTotTran_20']=(previous_df.iloc[-20:]["ZTotTran"].sum()) / 20
+                    previous_df['avg_ZTotTran_50']=(previous_df.iloc[-50:]["ZTotTran"].sum()) / 50
+                    previous_df['avg_ZTotTran_100']=(previous_df.iloc[-100:]["ZTotTran"].sum()) / 100
+                    previous_df['avg_ZTotTran_200']=(previous_df.iloc[-200:]["ZTotTran"].sum()) / 200
+                     
+                    symbols_return[pattern]={
+                        'value':{
+                            '1':df.iloc[-1]['avg_ZTotTran_1'],
+                            '5':df.iloc[-1]['avg_ZTotTran_5'],
+                            '10':df.iloc[-1]['avg_ZTotTran_10'],
+                            '20':df.iloc[-1]['avg_ZTotTran_20'],
+                            '50':df.iloc[-1]['avg_ZTotTran_50'],
+                            '100':df.iloc[-1]['avg_ZTotTran_100'],
+                            '200':df.iloc[-1]['avg_ZTotTran_200']
+                        },
+                        'previous':{
+                            '1':previous_df.iloc[-1]['avg_ZTotTran_1'],
+                            '5':previous_df.iloc[-1]['avg_ZTotTran_5'],
+                            '10':previous_df.iloc[-1]['avg_ZTotTran_10'],
+                            '20':previous_df.iloc[-1]['avg_ZTotTran_20'],
+                            '50':previous_df.iloc[-1]['avg_ZTotTran_50'],
+                            '100':previous_df.iloc[-1]['avg_ZTotTran_100'],
+                            '200':previous_df.iloc[-1]['avg_ZTotTran_200']
+                        },
+                        'last_update': df.iloc[-1]['date'],
+                        'last_price': df.iloc[-1]['close'],
+                    }
+                       
+                    
+                    
 
 
             if symbols_return:
@@ -266,7 +346,7 @@ class IndicatorUpdate(threading.Thread):
 
     def load_machines(self):
         
-        patterns = ["rate_of_return","avg_QTotCap"]
+        patterns = ["rate_of_return","avg_QTotCap","avg_QTotTran5J", "avg_ZTotTran"]
 
         allSymbols=self.getSymbols()
         
@@ -300,8 +380,8 @@ class IndicatorUpdate(threading.Thread):
         # else:
         
         
-        sql = "UPDATE `stock_rates` SET `rate_1`=%s,`rate_5`=%s, `rate_10`=%s, `rate_20`=%s, `rate_50`=%s , `rate_100`=%s, `rate_200`=%s,`avg_QTotCap_1`=%s, `avg_QTotCap_5`=%s , `avg_QTotCap_10`=%s, `avg_QTotCap_20`=%s,  `avg_QTotCap_50`=%s, `avg_QTotCap_100`=%s , `avg_QTotCap_200`=%s WHERE `Inscode`=%s "
-
+        sql = "UPDATE `stock_rates` SET `rate_1`=%s,`rate_5`=%s, `rate_10`=%s, `rate_20`=%s, `rate_50`=%s , `rate_100`=%s, `rate_200`=%s,`avg_QTotCap_1`=%s, `avg_QTotCap_5`=%s , `avg_QTotCap_10`=%s, `avg_QTotCap_20`=%s,  `avg_QTotCap_50`=%s, `avg_QTotCap_100`=%s , `avg_QTotCap_200`=%s ,`avg_QTotTran5J_1`=%s, `avg_QTotTran5J_5`=%s , `avg_QTotTran5J_10`=%s, `avg_QTotTran5J_20`=%s,  `avg_QTotTran5J_50`=%s, `avg_QTotTran5J_100`=%s , `avg_QTotTran5J_200`=%s ,`avg_ZTotTran_1`=%s, `avg_ZTotTran_5`=%s , `avg_ZTotTran_10`=%s, `avg_ZTotTran_20`=%s,  `avg_ZTotTran_50`=%s, `avg_ZTotTran_100`=%s , `avg_ZTotTran_200`=%s)"
+        sql = sql + "WHERE `Inscode`=%s"
         mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
         val = (
             float(symbols_return['rate_of_return']['value']['1']) if not math.isnan(symbols_return['rate_of_return']['value']['1']) and not math.isinf(symbols_return['rate_of_return']['value']['1']) else 0,
@@ -318,7 +398,25 @@ class IndicatorUpdate(threading.Thread):
             float(symbols_return['avg_QTotCap']['value']['50']) if not math.isnan(symbols_return['avg_QTotCap']['value']['50']) and not math.isinf(symbols_return['avg_QTotCap']['value']['50']) else 0,
             float(symbols_return['avg_QTotCap']['value']['100']) if not math.isnan(symbols_return['avg_QTotCap']['value']['100']) and not math.isinf(symbols_return['avg_QTotCap']['value']['100']) else 0,
             float(symbols_return['avg_QTotCap']['value']['200']) if not math.isnan(symbols_return['avg_QTotCap']['value']['200']) and not math.isinf(symbols_return['avg_QTotCap']['value']['200']) else 0,
+            float(symbols_return['avg_QTotTran5J_1']['value']['1']) if not math.isnan(symbols_return['avg_QTotTran5J_1']['value']['1']) and not math.isinf(symbols_return['avg_QTotTran5J_1']['value']['1']) else 0,
+            float(symbols_return['avg_QTotTran5J_5']['value']['5']) if not math.isnan(symbols_return['avg_QTotTran5J_5']['value']['5']) and not math.isinf(symbols_return['avg_QTotTran5J_5']['value']['5']) else 0,
+            float(symbols_return['avg_QTotTran5J_10']['value']['10']) if not math.isnan(symbols_return['avg_QTotTran5J_10']['value']['10']) and not math.isinf(symbols_return['avg_QTotTran5J_10']['value']['10']) else 0,
+            float(symbols_return['avg_QTotTran5J_20']['value']['20']) if not math.isnan(symbols_return['avg_QTotTran5J_20']['value']['20']) and not math.isinf(symbols_return['avg_QTotTran5J_20']['value']['20']) else 0,
+            float(symbols_return['avg_QTotTran5J_50']['value']['50']) if not math.isnan(symbols_return['avg_QTotTran5J_50']['value']['50']) and not math.isinf(symbols_return['avg_QTotTran5J_50']['value']['50']) else 0,
+            float(symbols_return['avg_QTotTran5J_100']['value']['100']) if not math.isnan(symbols_return['avg_QTotTran5J_100']['value']['100']) and not math.isinf(symbols_return['avg_QTotTran5J_100']['value']['100']) else 0,
+            float(symbols_return['avg_QTotTran5J_200']['value']['200']) if not math.isnan(symbols_return['avg_QTotTran5J_200']['value']['200']) and not math.isinf(symbols_return['avg_QTotTran5J_200']['value']['200']) else 0,
+            float(symbols_return['avg_ZTotTran_1']['value']['1']) if not math.isnan(symbols_return['avg_QTotTran5J_1']['value']['1'])  and not math.isinf(symbols_return['avg_QTotTran5J_1']['value']['1']) else 0,
+            float(symbols_return['avg_ZTotTran_5']['value']['5']) if not math.isnan(symbols_return['avg_QTotTran5J_5']['value']['5']) and not math.isinf(symbols_return['avg_QTotTran5J_5']['value']['5']) else 0,
+            float(symbols_return['avg_ZTotTran_10']['value']['10']) if not math.isnan(symbols_return['avg_QTotTran5J_10']['value']['10']) and not math.isinf(symbols_return['avg_QTotTran5J_10']['value']['10']) else 0,
+            float(symbols_return['avg_ZTotTran_20']['value']['20']) if not math.isnan(symbols_return['avg_QTotTran5J_20']['value']['20']) and not math.isinf(symbols_return['avg_QTotTran5J_20']['value']['20']) else 0,
+            float(symbols_return['avg_ZTotTran_50']['value']['50']) if not math.isnan(symbols_return['avg_QTotTran5J_50']['value']['50']) and not math.isinf(symbols_return['avg_QTotTran5J_50']['value']['50']) else 0,
+            float(symbols_return['avg_ZTotTran_100']['value']['100']) if not math.isnan(symbols_return['avg_QTotTran5J_100']['value']['100']) and not math.isinf(symbols_return['avg_QTotTran5J_100']['value']['100']) else 0,
+            float(symbols_return['avg_ZTotTran_200']['value']['200']) if not math.isnan(symbols_return['avg_QTotTran5J_200']['value']['200']) and not math.isinf(symbols_return['avg_QTotTran5J_200']['value']['200']) else 0,
             
+
+
+            
+
             symbol
         )
 
@@ -328,7 +426,7 @@ class IndicatorUpdate(threading.Thread):
         mydb.commit()
         try:
             if(mycursor.rowcount==0):
-                sql ="INSERT INTO `stock_rates` (`rate_1`, `rate_5`, `rate_10`, `rate_20`, `rate_50`, `rate_100`, `rate_200`,`avg_QTotCap_1`, `avg_QTotCap_5` , `avg_QTotCap_10`, `avg_QTotCap_20`,  `avg_QTotCap_50`, `avg_QTotCap_100` , `avg_QTotCap_200`,`Inscode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                sql ="INSERT INTO `stock_rates` (`rate_1`, `rate_5`, `rate_10`, `rate_20`, `rate_50`, `rate_100`, `rate_200`,`avg_QTotCap_1`, `avg_QTotCap_5` , `avg_QTotCap_10`, `avg_QTotCap_20`,  `avg_QTotCap_50`, `avg_QTotCap_100` , `avg_QTotCap_200`,`avg_QTotTran5J_1`, `avg_QTotTran5J_5` , `avg_QTotTran5J_10`, `avg_QTotTran5J_20`,  `avg_QTotTran5J_50`, `avg_QTotTran5J_100` , `avg_QTotTran5J_200` ,`avg_ZTotTran_1`, `avg_ZTotTran_5` , `avg_ZTotTran_10`, `avg_ZTotTran_20`,  `avg_ZTotTran_50`, `avg_ZTotTran_100` , `avg_ZTotTran_200` ,`Inscode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                 r=mycursor.execute(sql, val)
                 mydb.commit()
                 print("Inserted")

@@ -218,6 +218,48 @@ class IndicatorUpdate(threading.Thread):
                             'last_update': df.iloc[-1]['date'],
                     }
 
+                elif pattern=="moneyEnter":
+                    df['moneyEnter_1']=(df.iloc[-1]["Buy_I_Value"] - df.iloc[-1]["Sell_I_Value"])
+                    df['moneyEnter_5']=(df.iloc[-5:]["Buy_I_Value"].sum() - df.iloc[-5:]["Sell_I_Value"].sum())
+                    df['moneyEnter_10']=(df.iloc[-10:]["Buy_I_Value"].sum() - df.iloc[-10:]["Sell_I_Value"].sum())
+                    df['moneyEnter_20']=(df.iloc[-20:]["Buy_I_Value"].sum() - df.iloc[-20:]["Sell_I_Value"].sum())
+                    df['moneyEnter_50']=(df.iloc[-50:]["Buy_I_Value"].sum() - df.iloc[-50:]["Sell_I_Value"].sum())
+                    df['moneyEnter_100']=(df.iloc[-100:]["Buy_I_Value"].sum() - df.iloc[-100:]["Sell_I_Value"].sum())
+                    df['moneyEnter_200']=(df.iloc[-200:]["Buy_I_Value"].sum() - df.iloc[-200:]["Sell_I_Value"].sum())
+                    
+                    previous_df['moneyEnter_1']=(previous_df.iloc[-1]["Buy_I_Value"] - previous_df.iloc[-1]["Sell_I_Value"])
+                    previous_df['moneyEnter_5']=(previous_df.iloc[-5:]["Buy_I_Value"].sum() - previous_df.iloc[-5:]["Sell_I_Value"].sum())
+                    previous_df['moneyEnter_10']=(previous_df.iloc[-10:]["Buy_I_Value"].sum() - previous_df.iloc[-10:]["Sell_I_Value"].sum())
+                    previous_df['moneyEnter_20']=(previous_df.iloc[-20:]["Buy_I_Value"].sum() - previous_df.iloc[-20:]["Sell_I_Value"].sum())
+                    previous_df['moneyEnter_50']=(previous_df.iloc[-50:]["Buy_I_Value"].sum() - previous_df.iloc[-50:]["Sell_I_Value"].sum())
+                    previous_df['moneyEnter_100']=(previous_df.iloc[-100:]["Buy_I_Value"].sum() - previous_df.iloc[-100:]["Sell_I_Value"].sum())
+                    previous_df['moneyEnter_200']=(previous_df.iloc[-200:]["Buy_I_Value"].sum() - previous_df.iloc[-200:]["Sell_I_Value"].sum())
+                    
+                    symbols_return[pattern]={
+                            'value':{
+                                '1':df.iloc[-1]['moneyEnter_1'],
+                                '5':df.iloc[-1]['moneyEnter_5'],
+                                '10':df.iloc[-1]['moneyEnter_10'],
+                                '20':df.iloc[-1]['moneyEnter_20'],
+                                '50':df.iloc[-1]['moneyEnter_50'],
+                                '100':df.iloc[-1]['moneyEnter_100'],
+                                '200':df.iloc[-1]['moneyEnter_200'],
+                                  
+                                
+                            },
+                            'previous':{
+                                '1':previous_df.iloc[-1]['moneyEnter_1'],
+                                '5':previous_df.iloc[-1]['moneyEnter_5'],
+                                '10':previous_df.iloc[-1]['moneyEnter_10'],
+                                '20':previous_df.iloc[-1]['moneyEnter_20'],
+                                '50':previous_df.iloc[-1]['moneyEnter_50'],
+                                '100':previous_df.iloc[-1]['moneyEnter_100'],
+                                '200':previous_df.iloc[-1]['moneyEnter_200'],
+                            },
+                            'last_update': df.iloc[-1]['date'],
+                    }
+                    
+                     
 
 
 
@@ -311,7 +353,7 @@ class IndicatorUpdate(threading.Thread):
 
     def load_machines(self):
         
-        patterns = ["buyHead","sellHead","powerBuy"]
+        patterns = ["buyHead","sellHead","powerBuy","moneyEnter"]
 
         allSymbols=self.getSymbols()
         
@@ -347,8 +389,8 @@ class IndicatorUpdate(threading.Thread):
         # else:
         
 
-        sql = "UPDATE `stock_clients` SET `buyHead_1`=%s,`buyHead_5`=%s, `buyHead_10`=%s, `buyHead_20`=%s, `buyHead_50`=%s , `buyHead_100`=%s, `buyHead_200`=%s , `sellHead_1`=%s, `sellHead_5`=%s, `sellHead_10`=%s, `sellHead_20`=%s, `sellHead_50`=%s, `sellHead_100`=%s, `sellHead_200`=%s, `powerBuy_1`=%s, `powerBuy_5`=%s, `powerBuy_10`=%s, `powerBuy_20`=%s, `powerBuy_50`=%s, `powerBuy_100`=%s, `powerBuy_200`=%s WHERE `InsCode`=%s"
-
+        sql = "UPDATE `stock_clients` SET `buyHead_1`=%s,`buyHead_5`=%s, `buyHead_10`=%s, `buyHead_20`=%s, `buyHead_50`=%s , `buyHead_100`=%s, `buyHead_200`=%s , `sellHead_1`=%s, `sellHead_5`=%s, `sellHead_10`=%s, `sellHead_20`=%s, `sellHead_50`=%s, `sellHead_100`=%s, `sellHead_200`=%s, `powerBuy_1`=%s, `powerBuy_5`=%s, `powerBuy_10`=%s, `powerBuy_20`=%s, `powerBuy_50`=%s, `powerBuy_100`=%s, `powerBuy_200`=%s, `moneyEnter_1`=%s, `moneyEnter_5`=%s, `moneyEnter_10`=%s, `moneyEnter_20`=%s, `moneyEnter_50`=%s, `moneyEnter_100`=%s, `moneyEnter_200`=%s"
+        sql = sql + " WHERE `InsCode`=%s"
         mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
         val = (
             float(symbols_return['buyHead']['value']['1']) if not math.isnan(symbols_return['buyHead']['value']['1']) and not math.isinf(symbols_return['buyHead']['value']['1']) else 0,
@@ -386,7 +428,7 @@ class IndicatorUpdate(threading.Thread):
             if(mycursor.rowcount==0):
                 # sql ="INSERT INTO `stock_params` (`stoch_signal`,`StochasticOscillator`,`psar`,`psar_down`,`psar_down_indicator`,`psar_up`,`psar_up_indicator`,`adx_positive`, `adx_negative` ,`ichimoku_a`, `ichimoku_b`, `ichimoku_base_line`, `ichimoku_conversion_line`,`historical_low`,`historical_high`,`historical_low_date`,`historical_high_date`,`rsi`, `macd`,`Signal_Line`,`MACD_Line`, `uo`, `roc`, `ema_10`, `ema_20`, `ema_50`, `ema_100`, `ema_200`, `sma_10`, `sma_20`, `sma_50`, `sma_100`, `sma_200`, `stoch`, `adx`, `cci_20`, `chaikin_money_flow`, `stoch_rsi`, `williams`, `atr_14`, `money_flow_index`,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
 
-                sql ="INSERT INTO `stock_clients` (`buyHead_1`, `buyHead_5`, `buyHead_10`, `buyHead_20`, `buyHead_50`, `buyHead_100`, `buyHead_200`,`sellHead_1`, `sellHead_5`, `sellHead_10`, `sellHead_20`, `sellHead_50`, `sellHead_100`, `sellHead_200`, `powerBuy_1`, `powerBuy_5`, `powerBuy_10`, `powerBuy_20`, `powerBuy_50`, `powerBuy_100`, `powerBuy_200` ,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                sql ="INSERT INTO `stock_clients` (`buyHead_1`, `buyHead_5`, `buyHead_10`, `buyHead_20`, `buyHead_50`, `buyHead_100`, `buyHead_200`,`sellHead_1`, `sellHead_5`, `sellHead_10`, `sellHead_20`, `sellHead_50`, `sellHead_100`, `sellHead_200`, `powerBuy_1`, `powerBuy_5`, `powerBuy_10`, `powerBuy_20`, `powerBuy_50`, `powerBuy_100`, `powerBuy_200`, `moneyEnter_1`, `moneyEnter_5`, `moneyEnter_10`, `moneyEnter_20`, `moneyEnter_50`, `moneyEnter_100`, `moneyEnter_200` ,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                 r=mycursor.execute(sql, val)
                 mydb.commit()
                 print("Inserted")
