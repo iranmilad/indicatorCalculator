@@ -405,13 +405,13 @@ class IndicatorUpdate(threading.Thread):
             float(symbols_return['avg_QTotTran5J_50']['value']['50']) if not math.isnan(symbols_return['avg_QTotTran5J_50']['value']['50']) and not math.isinf(symbols_return['avg_QTotTran5J_50']['value']['50']) else 0,
             float(symbols_return['avg_QTotTran5J_100']['value']['100']) if not math.isnan(symbols_return['avg_QTotTran5J_100']['value']['100']) and not math.isinf(symbols_return['avg_QTotTran5J_100']['value']['100']) else 0,
             float(symbols_return['avg_QTotTran5J_200']['value']['200']) if not math.isnan(symbols_return['avg_QTotTran5J_200']['value']['200']) and not math.isinf(symbols_return['avg_QTotTran5J_200']['value']['200']) else 0,
-            float(symbols_return['avg_ZTotTran_1']['value']['1']) if not math.isnan(symbols_return['avg_QTotTran5J_1']['value']['1'])  and not math.isinf(symbols_return['avg_QTotTran5J_1']['value']['1']) else 0,
-            float(symbols_return['avg_ZTotTran_5']['value']['5']) if not math.isnan(symbols_return['avg_QTotTran5J_5']['value']['5']) and not math.isinf(symbols_return['avg_QTotTran5J_5']['value']['5']) else 0,
-            float(symbols_return['avg_ZTotTran_10']['value']['10']) if not math.isnan(symbols_return['avg_QTotTran5J_10']['value']['10']) and not math.isinf(symbols_return['avg_QTotTran5J_10']['value']['10']) else 0,
-            float(symbols_return['avg_ZTotTran_20']['value']['20']) if not math.isnan(symbols_return['avg_QTotTran5J_20']['value']['20']) and not math.isinf(symbols_return['avg_QTotTran5J_20']['value']['20']) else 0,
-            float(symbols_return['avg_ZTotTran_50']['value']['50']) if not math.isnan(symbols_return['avg_QTotTran5J_50']['value']['50']) and not math.isinf(symbols_return['avg_QTotTran5J_50']['value']['50']) else 0,
-            float(symbols_return['avg_ZTotTran_100']['value']['100']) if not math.isnan(symbols_return['avg_QTotTran5J_100']['value']['100']) and not math.isinf(symbols_return['avg_QTotTran5J_100']['value']['100']) else 0,
-            float(symbols_return['avg_ZTotTran_200']['value']['200']) if not math.isnan(symbols_return['avg_QTotTran5J_200']['value']['200']) and not math.isinf(symbols_return['avg_QTotTran5J_200']['value']['200']) else 0,
+            float(symbols_return['avg_ZTotTran_1']['value']['1']) if not math.isnan(symbols_return['avg_ZTotTran_1']['value']['1'])  and not math.isinf(symbols_return['avg_ZTotTran_1']['value']['1']) else 0,
+            float(symbols_return['avg_ZTotTran_5']['value']['5']) if not math.isnan(symbols_return['avg_ZTotTran_5']['value']['5']) and not math.isinf(symbols_return['avg_ZTotTran_5']['value']['5']) else 0,
+            float(symbols_return['avg_ZTotTran_10']['value']['10']) if not math.isnan(symbols_return['avg_ZTotTran_10']['value']['10']) and not math.isinf(symbols_return['avg_ZTotTran_10']['value']['10']) else 0,
+            float(symbols_return['avg_ZTotTran_20']['value']['20']) if not math.isnan(symbols_return['avg_ZTotTran_20']['value']['20']) and not math.isinf(symbols_return['avg_ZTotTran_20']['value']['20']) else 0,
+            float(symbols_return['avg_ZTotTran_50']['value']['50']) if not math.isnan(symbols_return['avg_ZTotTran_50']['value']['50']) and not math.isinf(symbols_return['avg_ZTotTran_50']['value']['50']) else 0,
+            float(symbols_return['avg_ZTotTran_100']['value']['100']) if not math.isnan(symbols_return['avg_ZTotTran_100']['value']['100']) and not math.isinf(symbols_return['avg_ZTotTran_100']['value']['100']) else 0,
+            float(symbols_return['avg_ZTotTran_200']['value']['200']) if not math.isnan(symbols_return['avg_ZTotTran_200']['value']['200']) and not math.isinf(symbols_return['avg_ZTotTran_200']['value']['200']) else 0,
             
 
 
