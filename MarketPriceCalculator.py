@@ -382,7 +382,7 @@ class IndicatorUpdate(threading.Thread):
         
         
         sql = "UPDATE `stock_rates` SET `rate_1`=%s,`rate_5`=%s, `rate_10`=%s, `rate_20`=%s, `rate_50`=%s , `rate_100`=%s, `rate_200`=%s,`avg_QTotCap_1`=%s, `avg_QTotCap_5`=%s , `avg_QTotCap_10`=%s, `avg_QTotCap_20`=%s,  `avg_QTotCap_50`=%s, `avg_QTotCap_100`=%s , `avg_QTotCap_200`=%s ,`avg_QTotTran5J_1`=%s, `avg_QTotTran5J_5`=%s , `avg_QTotTran5J_10`=%s, `avg_QTotTran5J_20`=%s,  `avg_QTotTran5J_50`=%s, `avg_QTotTran5J_100`=%s , `avg_QTotTran5J_200`=%s ,`avg_ZTotTran_1`=%s, `avg_ZTotTran_5`=%s , `avg_ZTotTran_10`=%s, `avg_ZTotTran_20`=%s,  `avg_ZTotTran_50`=%s, `avg_ZTotTran_100`=%s , `avg_ZTotTran_200`=%s)"
-        sql = sql + "WHERE `Inscode`=%s"
+        sql = sql + " WHERE `Inscode`=%s"
         mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
         val = (
             float(symbols_return['rate_of_return']['value']['1']) if not math.isnan(symbols_return['rate_of_return']['value']['1']) and not math.isinf(symbols_return['rate_of_return']['value']['1']) else 0,
