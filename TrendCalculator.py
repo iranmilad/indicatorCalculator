@@ -445,8 +445,8 @@ def now_time_run():
     time_tset_now = now.strftime("%H%M")
     weekday=datetime.today().weekday()
     print(time_tset_now)
-    s_t = "0001"
-    e_t = "2302"
+    s_t = "1701"
+    e_t = "1702"
     if time_tset_now <e_t and time_tset_now >= s_t and weekday in [6,5,0,1,2]:
         exit_run = False
     else:
@@ -457,7 +457,7 @@ if __name__ == '__main__':
     try:
         indicator=TrendUpdate()
         while True:
-            while not now_time_run():
+            while now_time_run():
                 print("Exit time")
                 time.sleep(60)
         
