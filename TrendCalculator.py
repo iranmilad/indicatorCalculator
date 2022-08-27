@@ -387,7 +387,9 @@ class TrendUpdate(threading.Thread):
 
 
         sql = "UPDATE `stock_patterns` SET `trend`=%s,`pivot`=%s WHERE `Inscode`=%s"
-
+        if not 'trend' in symbols_return or not 'pivot' in symbols_return:
+            return
+        
         mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
         val = (
             str(symbols_return['trend']['value']) ,
