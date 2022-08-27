@@ -305,8 +305,8 @@ class TrendUpdate(threading.Thread):
             except:
                 print('ib connection error')
                 #print(response.text)
-                time.sleep(1)
-                continue
+                time.sleep(60)
+                break
         main_dict[Inscode]=[]
         counter=0
         for i in diffgr:
