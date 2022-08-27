@@ -245,6 +245,9 @@ class TrendUpdate(threading.Thread):
                             "last_price": df.iloc[-1]["close"],
                     }
 
+                else:
+                    print("pattern is:", pattern)
+                    continue
                 # except NameError:
                 #     print('An exception flew by!')
                 #     raise
