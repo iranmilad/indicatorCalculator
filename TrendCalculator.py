@@ -304,6 +304,7 @@ class TrendUpdate(threading.Thread):
                 break
             except:
                 print('ib connection error')
+                diffgr =[]
                 #print(response.text)
                 time.sleep(60)
                 break
