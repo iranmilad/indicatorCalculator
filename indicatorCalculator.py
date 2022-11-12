@@ -11,43 +11,92 @@ import _thread
 import mysql.connector
 import xmltodict
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
+import psycopg2
+from os import environ
+
+DB_USER = environ.get("FOM_DB_USER", default='db_tseshow_user')
+DB_PASS = environ.get("FOM_DB_PASSWORD", default='l8PDQGtKyMvynFb')
+DB_HOST = environ.get("FOM_DB_HOST", default='87.107.172.173')
+DB_PORT = environ.get("FOM_DB_PORT", default='6033')
+DB_NAME = environ.get("FOM_DB_NAME", default='stockfeeder')
 
 class IndicatorUpdate(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
-        self.host='localhost'
-        self.port='6389'
-        self.password=None
-        self.host_price_server='149.28.120.38'
-        self.port_price_server='6379'
-        self.password_price_server='6$gtA453'
-        self.mysqluser='root'
-        self.mySqlHost='localhost'
-        self.mySqlDBName='stockfeeder'
-        # self.forex_symbol=self.getExchangeSymbols('IB')
-        # self.crypto_symbol=self.getExchangeSymbols('Binance')
-        # self.primary_nasdaq=self.getExchangeSymbols('Nasdaq')
-        # self.primary_nyse=self.getExchangeSymbols('Nyse')
-        #self.q=q
+        self.user= DB_USER
+        self.password= DB_PASS
+        self.host= DB_HOST
+        self.dbName= DB_NAME 
+        self.dbPort= DB_PORT
+        self.getNoavaranSymbol={}
+        self.token=""
+        self.tokenEx=""
+        NoavaranToken = open("NoavaranToken.json")
+        data = json.load(NoavaranToken)
+        self.token=data['token']['token']
+        self.tokenEx=datetime.strptime(data['ex'], '%Y-%m-%d %H:%M:%S.%f')            
+        self.getNoavaranSymbol=self.getNoavaranExchangeSymbols()
 
-    # def run(self):
-    #     f, args =self.q.get()
-    #     f(*args)
-    #     self.q.task_done()
 
 
     def get_database_number(self,interval):
             return 10
+
+    def get_token(self)->str:
+        url = "https://data3.nadpco.com/api/v2/Token"
+        
+        username = "FFV147110053"
+        password = "DDYEcPqgHdgUeAS"
+        
+        payload={}
+        now = datetime.now()
+        #datetime.strptime(request['noavaran']['TokenEx'], '%y/%m/%d %H:%M:%S')
+        
+        if not self.tokenEx or now>self.tokenEx:
+            response = requests.request("POST", url, auth=(username, password), data=payload)
+            data = response.text
+            #data = r"{'token': '0D82D591DF32F6F4FC8B557BB6892A14F0D77E7168F95C86CF5154D75BB3D825F939E4E92C430824FFAB89BC1734786305CD6667A53BD8AD31F98558BC05BE0A'}"
+            data= data.replace("\'", "\"")
+
+            
+            data =json.loads(data)
+            
+            print(data['token'])
+            
+            
+            now = now + timedelta(hours=6)
+            json_object = json.dumps({"token":data,"ex":now}, indent=4, sort_keys=True, default=str)
+            with open("NoavaranToken.json", "w") as outfile:
+                outfile.write(json_object)
+                
+            self.tokenEx = now
+            self.token= data['token']
+            return self.token
+            
+        else:
+            return self.token                
+
           
     def connect_to_mysql(self):
         # Connecting from the server
-        conn = mysql.connector.connect(user = 'root',
-                                    host = 'localhost',
-                                    database = 'stockfeeder')
-        return conn
-
+        while True:
+            try:
+                conn = mysql.connector.connect(user = self.user,password=self.password, host = self.host,port=self.dbPort,auth_plugin='mysql_native_password',  database = self.dbName)
+                return conn
+            except:
+                time.sleep(60)
+                continue
+            
+    def connect_to_pg(self):
+        connection = psycopg2.connect(user=self.user,
+                                password=self.password,
+                                host=self.host,
+                                port=self.dbPort,
+                                database=self.dbName)
+        return connection
+   
     def calculate_indicator(self,symbols,patterns,interval):
         start_time = time.time()
 
@@ -57,7 +106,7 @@ class IndicatorUpdate(threading.Thread):
 
         for symbol in symbols:
 
-            r = self.get_data(symbol)
+            r = self.get_data_noavaran(symbol)
             # try:
             if not symbol in r.keys():
                 print("symbol is not exist in %s "%(symbol))
@@ -755,7 +804,46 @@ class IndicatorUpdate(threading.Thread):
             main_dict[InsCode].append(re_json)    
             
         return main_dict
-                           
+
+    def get_data_noavaran(self,Inscode):
+        main_dict = {}
+        now = datetime.now()
+        time_tset_now = now.strftime("%Y%m%d")
+        if Inscode in self.getNoavaranSymbol:
+            pass
+        else:
+            main_dict[Inscode]=[]
+            return main_dict
+        
+        url = "https://data3.nadpco.com/api/v3/TS/AdjustedTradesById/"+str(int(self.getNoavaranSymbol[Inscode]["coID"]))+"?fromdate=14000501"
+        x=[] #price series  
+        payload={}
+
+
+        headers = {
+            'Authorization': 'Bearer '+ self.get_token(),
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers, data=payload)
+        data= response.text
+        data=json.loads(data)
+        for bar in data: 
+        
+            re_json={
+                "date": datetime.strptime(bar["tradeDateGre"], "%Y-%m-%dT%H:%M:%S"),
+                "open": float(bar["openingAdjPrice"]),
+                "high": float(bar["maxAdjPrice"]),
+                "low" : float(bar["minAdjPrice"]),
+                "close" : float(bar["lastAdjPrice"]),
+                "volume" : float(bar["tradeValue"]), 
+            } 
+            if Inscode not in main_dict.keys():
+                main_dict[Inscode] = []
+            main_dict[Inscode].append(re_json)    
+            
+        return main_dict
+       
+                      
     def getSymbols(self):
         return self.getExchangeSymbols("tsetmc")
         
@@ -801,7 +889,25 @@ class IndicatorUpdate(threading.Thread):
                 symbols.append(key)
                         
         return symbols
+    def getNoavaranExchangeSymbols(self):
+        url = "https://data3.nadpco.com/api/v3/BaseInfo/Companies"
+
+        payload={}
+        headers = {}
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+
+        data= response.text
+        Instrument=json.loads(data)
+        main_dict={}
+
+        list=[]
+        for c in Instrument:
+            main_dict[c["tseCode"]]=c 
     
+        return main_dict
+    
+   
     def update_key(self,symbol,symbols_return):
         # if symbol in self.crypto_symbol:
         #     sql = "UPDATE `crypto_indicators` SET `rsi`=%s,`macd`=%s,`uo`=%s,`roc`=%s,`ema-10`=%s,`ema-20`=%s,`ema-50`=%s,`ema-100`=%s,`ema-200`=%s,`sma-10`=%s,`sma-20`=%s,`sma-50`=%s,`sma-100`=%s,`sma-200`=%s,`stoch`=%s,`adx`=%s,`cci-20`=%s,`chaikin-money-flow`=%s,`stoch-rsi`=%s,`williams`=%s,`atr-14`=%s,`money-flow-index`=%s WHERE `crypto_id`= (SELECT `id` From `cryptos` WHERE `symbol`=%s LIMIT 1)"
@@ -811,8 +917,12 @@ class IndicatorUpdate(threading.Thread):
         
 
         sql = "UPDATE `stock_params` SET `stoch_signal`=%s, `StochasticOscillator`=%s,`psar`=%s,`psar_down`=%s,`psar_down_indicator`=%s,`psar_up`=%s,`psar_up_indicator`=%s,`adx_positive`=%s, `adx_negative`=%s ,`ichimoku_a`=%s, `ichimoku_b`=%s , `ichimoku_base_line`=%s , `ichimoku_conversion_line`=%s , `historical_low`=%s,`historical_high`=%s,`historical_low_date`=%s,`historical_high_date`=%s,`rsi`=%s,`macd`=%s,`Signal_Line`=%s,`MACD_Line`=%s,`uo`=%s,`roc`=%s,`ema_10`=%s,`ema_20`=%s,`ema_50`=%s,`ema_100`=%s,`ema_200`=%s,`sma_10`=%s,`sma_20`=%s,`sma_50`=%s,`sma_100`=%s,`sma_200`=%s,`stoch`=%s,`adx`=%s,`cci_20`=%s,`chaikin_money_flow`=%s,`stoch_rsi`=%s,`williams`=%s,`atr_14`=%s,`money_flow_index`=%s WHERE `Inscode`=%s"
+        
 
-        mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
+        # mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
+        # mycursor = mydb.cursor()
+        # r=mycursor.execute(sql, val)
+        # mydb.commit()
         val = (
             float(symbols_return['StochasticOscillator']['value']['stoch_signal']) if not math.isnan(symbols_return['StochasticOscillator']['value']['stoch_signal']) and not math.isinf(symbols_return['StochasticOscillator']['value']['stoch_signal']) else 0,
             float(symbols_return['StochasticOscillator']['value']['StochasticOscillator']) if not math.isnan(symbols_return['StochasticOscillator']['value']['StochasticOscillator']) and not math.isinf(symbols_return['StochasticOscillator']['value']['StochasticOscillator']) else 0,
@@ -864,23 +974,24 @@ class IndicatorUpdate(threading.Thread):
             float(symbols_return['money-flow-index']['value']['MFI']) if not math.isnan(symbols_return['money-flow-index']['value']['MFI']) and not math.isinf(symbols_return['money-flow-index']['value']['MFI']) else 0,
             symbol
         )
+        connection = self.connect_to_mysql()
+        type(symbols_return['historical_price']['value']['date_low'])
+        cursor = connection.cursor()
+        cursor.execute(sql, val)
 
-        mycursor = mydb.cursor()
-        #print(sql%(val))
-        r=mycursor.execute(sql, val)
-        mydb.commit()
         try:
-            if(mycursor.rowcount==0):
+            if(cursor.rowcount==0):
                 
                 sql ="INSERT INTO `stock_params` (`stoch_signal`,`StochasticOscillator`,`psar`,`psar_down`,`psar_down_indicator`,`psar_up`,`psar_up_indicator`,`adx_positive`, `adx_negative` ,`ichimoku_a`, `ichimoku_b`, `ichimoku_base_line`, `ichimoku_conversion_line`,`historical_low`,`historical_high`,`historical_low_date`,`historical_high_date`,`rsi`, `macd`,`Signal_Line`,`MACD_Line`, `uo`, `roc`, `ema_10`, `ema_20`, `ema_50`, `ema_100`, `ema_200`, `sma_10`, `sma_20`, `sma_50`, `sma_100`, `sma_200`, `stoch`, `adx`, `cci_20`, `chaikin_money_flow`, `stoch_rsi`, `williams`, `atr_14`, `money_flow_index`,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-                r=mycursor.execute(sql, val)
-                mydb.commit()
+                r=cursor.execute(sql, val)
+                connection.commit()
                 print("Inserted")
-            print(mycursor.rowcount, "details inserted")
+            print(cursor.rowcount, "details inserted")
+            pass
         except:
             pass
-        
-        mydb.close()
+        cursor.close()
+        connection.close()
 
 
 class ScanicalIndicator:

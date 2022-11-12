@@ -11,43 +11,83 @@ import _thread
 import mysql.connector
 import xmltodict
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
+import psycopg2
+from os import environ
+
+DB_USER = environ.get("FOM_DB_USER", default='db_tseshow_user')
+DB_PASS = environ.get("FOM_DB_PASSWORD", default='l8PDQGtKyMvynFb')
+DB_HOST = environ.get("FOM_DB_HOST", default='87.107.172.173')
+DB_PORT = environ.get("FOM_DB_PORT", default='6033')
+DB_NAME = environ.get("FOM_DB_NAME", default='stockfeeder')
 
 class IndicatorUpdate(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
-        self.host='localhost'
-        self.port='6389'
-        self.password=None
-        self.host_price_server='149.28.120.38'
-        self.port_price_server='6379'
-        self.password_price_server='6$gtA453'
-        self.mysqluser='root'
-        self.mySqlHost='localhost'
-        self.mySqlDBName='stockfeeder'
-        # self.forex_symbol=self.getExchangeSymbols('IB')
-        # self.crypto_symbol=self.getExchangeSymbols('Binance')
-        # self.primary_nasdaq=self.getExchangeSymbols('Nasdaq')
-        # self.primary_nyse=self.getExchangeSymbols('Nyse')
-        #self.q=q
+        self.user= DB_USER
+        self.password= DB_PASS
+        self.host= DB_HOST
+        self.dbName= DB_NAME 
+        self.dbPort= DB_PORT
+        self.getNoavaranSymbol={}
 
-    # def run(self):
-    #     f, args =self.q.get()
-    #     f(*args)
-    #     self.q.task_done()
 
 
     def get_database_number(self,interval):
             return 10
-          
+ 
+    def get_token(self,request)->str:
+        url = "https://data3.nadpco.com/api/v2/Token"
+        
+        username = "FFV147110053"
+        password = "DDYEcPqgHdgUeAS"
+        
+        payload={}
+        now = datetime.datetime.now()
+        #datetime.datetime.strptime(request['noavaran']['TokenEx'], '%y/%m/%d %H:%M:%S')
+        
+        if not request['noavaran']['TokenEx'] or now>request['noavaran']['TokenEx']:
+            response = requests.request("POST", url, auth=(username, password), data=payload)
+            data =response.text
+            #data = r"{'token': '0D82D591DF32F6F4FC8B557BB6892A14F0D77E7168F95C86CF5154D75BB3D825F939E4E92C430824FFAB89BC1734786305CD6667A53BD8AD31F98558BC05BE0A'}"
+            data= data.replace("\'", "\"")
+
+            
+            data =json.loads(data)
+            
+            print(data['token'])
+            
+            
+            now = now + datetime.timedelta(hours=6)
+            json_object = json.dumps({"token":data,"ex":now}, indent=4, sort_keys=True, default=str)
+            with open("NoavaranToken.json", "w") as outfile:
+                outfile.write(json_object)
+                
+            request['noavaran']['TokenEx'] = now
+            request['noavaran']['Token']= data['token']
+            return request['noavaran']['Token']
+            
+        else:
+            return request['noavaran']['Token']                
+
     def connect_to_mysql(self):
         # Connecting from the server
-        conn = mysql.connector.connect(user = 'root',
-                                    host = 'localhost',
-                                    database = 'stockfeeder')
-        return conn
-
+        while True:
+            try:
+                conn = mysql.connector.connect(user = self.user,password=self.password, host = self.host,port=self.dbPort,auth_plugin='mysql_native_password',  database = self.dbName)
+                return conn
+            except:
+                time.sleep(60)
+                continue
+    def connect_to_pg(self):
+        connection = psycopg2.connect(user=self.user,
+                                password=self.password,
+                                host=self.host,
+                                port=self.dbPort,
+                                database=self.dbName)
+        return connection
+   
     def calculate_indicator(self,symbols,patterns,interval):
         start_time = time.time()
 
@@ -285,15 +325,15 @@ class IndicatorUpdate(threading.Thread):
         }
         
         payload = f"""<?xml version="1.0" encoding="utf-8"?>
-    <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-    <soap12:Body>
-    <ClientTypeByInsCode xmlns="http://tsetmc.com/">
-    <UserName>{username}</UserName>
-    <Password>{password}</Password>
-    <InsCode>{int(Inscode)}</InsCode>
-    </ClientTypeByInsCode>
-    </soap12:Body>
-    </soap12:Envelope>"""     
+        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+        <soap12:Body>
+        <ClientTypeByInsCode xmlns="http://tsetmc.com/">
+        <UserName>{username}</UserName>
+        <Password>{password}</Password>
+        <InsCode>{int(Inscode)}</InsCode>
+        </ClientTypeByInsCode>
+        </soap12:Body>
+        </soap12:Envelope>"""     
         while True:
             try:
                 response = requests.post(url, headers=headers, data=payload)
@@ -332,6 +372,7 @@ class IndicatorUpdate(threading.Thread):
             main_dict[InsCode].append(re_json)    
             
         return main_dict
+
                            
     def getSymbols(self):
         return self.getExchangeSymbols("tsetmc")
@@ -362,7 +403,7 @@ class IndicatorUpdate(threading.Thread):
             print('sleep')
             time.sleep(60)
             
-        
+       
     def getExchangeSymbols(self,exchange):
         url = 'https://feed.tseshow.com/api/stockInSector'
         #url = 'http://localhost:8000/api/stockInSector'
@@ -391,7 +432,7 @@ class IndicatorUpdate(threading.Thread):
 
         sql = "UPDATE `stock_clients` SET `buyHead_1`=%s,`buyHead_5`=%s, `buyHead_10`=%s, `buyHead_20`=%s, `buyHead_50`=%s , `buyHead_100`=%s, `buyHead_200`=%s , `sellHead_1`=%s, `sellHead_5`=%s, `sellHead_10`=%s, `sellHead_20`=%s, `sellHead_50`=%s, `sellHead_100`=%s, `sellHead_200`=%s, `powerBuy_1`=%s, `powerBuy_5`=%s, `powerBuy_10`=%s, `powerBuy_20`=%s, `powerBuy_50`=%s, `powerBuy_100`=%s, `powerBuy_200`=%s, `moneyEnter_1`=%s, `moneyEnter_5`=%s, `moneyEnter_10`=%s, `moneyEnter_20`=%s, `moneyEnter_50`=%s, `moneyEnter_100`=%s, `moneyEnter_200`=%s"
         sql = sql + " WHERE `InsCode`=%s"
-        mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
+        connection = self.connect_to_mysql()
         val = (
             float(symbols_return['buyHead']['value']['1']) if not math.isnan(symbols_return['buyHead']['value']['1']) and not math.isinf(symbols_return['buyHead']['value']['1']) else 0,
             float(symbols_return['buyHead']['value']['5']) if not math.isnan(symbols_return['buyHead']['value']['5']) and not math.isinf(symbols_return['buyHead']['value']['5']) else 0,
@@ -426,23 +467,22 @@ class IndicatorUpdate(threading.Thread):
             symbol
         )
 
-        mycursor = mydb.cursor()
-        #print(sql%(val))
-        r=mycursor.execute(sql, val)
-        mydb.commit()
+        cursor = connection.cursor()
+        cursor.execute(sql, val)
+        
         try:
-            if(mycursor.rowcount==0):
+            if(cursor.rowcount==0):
                 # sql ="INSERT INTO `stock_params` (`stoch_signal`,`StochasticOscillator`,`psar`,`psar_down`,`psar_down_indicator`,`psar_up`,`psar_up_indicator`,`adx_positive`, `adx_negative` ,`ichimoku_a`, `ichimoku_b`, `ichimoku_base_line`, `ichimoku_conversion_line`,`historical_low`,`historical_high`,`historical_low_date`,`historical_high_date`,`rsi`, `macd`,`Signal_Line`,`MACD_Line`, `uo`, `roc`, `ema_10`, `ema_20`, `ema_50`, `ema_100`, `ema_200`, `sma_10`, `sma_20`, `sma_50`, `sma_100`, `sma_200`, `stoch`, `adx`, `cci_20`, `chaikin_money_flow`, `stoch_rsi`, `williams`, `atr_14`, `money_flow_index`,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
 
                 sql ="INSERT INTO `stock_clients` (`buyHead_1`, `buyHead_5`, `buyHead_10`, `buyHead_20`, `buyHead_50`, `buyHead_100`, `buyHead_200`,`sellHead_1`, `sellHead_5`, `sellHead_10`, `sellHead_20`, `sellHead_50`, `sellHead_100`, `sellHead_200`, `powerBuy_1`, `powerBuy_5`, `powerBuy_10`, `powerBuy_20`, `powerBuy_50`, `powerBuy_100`, `powerBuy_200`, `moneyEnter_1`, `moneyEnter_5`, `moneyEnter_10`, `moneyEnter_20`, `moneyEnter_50`, `moneyEnter_100`, `moneyEnter_200` ,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-                r=mycursor.execute(sql, val)
-                mydb.commit()
+                r=cursor.execute(sql, val)
+                connection.commit()
                 print("Inserted")
-            print(mycursor.rowcount, "details inserted")
+            print(cursor.rowcount, "details inserted")
         except:
             pass
-        
-        mydb.close()
+        cursor.close()
+        connection.close()
 
 
 print('run service')

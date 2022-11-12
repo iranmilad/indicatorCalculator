@@ -11,46 +11,94 @@ import _thread
 import mysql.connector
 import xmltodict
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 from scipy.stats import linregress
+import psycopg2
+from os import environ
 
+DB_USER = environ.get("FOM_DB_USER", default='db_tseshow_user')
+DB_PASS = environ.get("FOM_DB_PASSWORD", default='l8PDQGtKyMvynFb')
+DB_HOST = environ.get("FOM_DB_HOST", default='87.107.172.173')
+DB_PORT = environ.get("FOM_DB_PORT", default='6033')
+DB_NAME = environ.get("FOM_DB_NAME", default='stockfeeder')
 
 class TrendUpdate(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
-        self.host='localhost'
-        self.port='6389'
-        self.password=None
-        self.host_price_server='149.28.120.38'
-        self.port_price_server='6379'
-        self.password_price_server='6$gtA453'
-        self.mysqluser='root'
-        self.mySqlHost='localhost'
-        self.mySqlDBName='stockfeeder'
-        # self.forex_symbol=self.getExchangeSymbols('IB')
-        # self.crypto_symbol=self.getExchangeSymbols('Binance')
-        # self.primary_nasdaq=self.getExchangeSymbols('Nasdaq')
-        # self.primary_nyse=self.getExchangeSymbols('Nyse')
-        #self.q=q
-
-    # def run(self):
-    #     f, args =self.q.get()
-    #     f(*args)
-    #     self.q.task_done()
+        self.user= DB_USER
+        self.password= DB_PASS
+        self.host= DB_HOST
+        self.dbName= DB_NAME 
+        self.dbPort= DB_PORT
+        self.getNoavaranSymbol={}
+        self.token=""
+        self.tokenEx=""
+        NoavaranToken = open("NoavaranToken.json")
+        data = json.load(NoavaranToken)
+        self.token=data['token']['token']
+        self.tokenEx=datetime.strptime(data['ex'], '%Y-%m-%d %H:%M:%S.%f')            
+        self.getNoavaranSymbol=self.getNoavaranExchangeSymbols()
 
 
     def get_database_number(self,interval):
             return 10
-          
+
+    def get_token(self)->str:
+        url = "https://data3.nadpco.com/api/v2/Token"
+        
+        username = "FFV147110053"
+        password = "DDYEcPqgHdgUeAS"
+        
+        payload={}
+        now = datetime.now()
+        #datetime.strptime(request['noavaran']['TokenEx'], '%y/%m/%d %H:%M:%S')
+        
+        if not self.tokenEx or now>self.tokenEx:
+            response = requests.request("POST", url, auth=(username, password), data=payload)
+            data = response.text
+            #data = r"{'token': '0D82D591DF32F6F4FC8B557BB6892A14F0D77E7168F95C86CF5154D75BB3D825F939E4E92C430824FFAB89BC1734786305CD6667A53BD8AD31F98558BC05BE0A'}"
+            data= data.replace("\'", "\"")
+
+            
+            data =json.loads(data)
+            
+            print(data['token'])
+            
+            
+            now = now + timedelta(hours=6)
+            json_object = json.dumps({"token":data,"ex":now}, indent=4, sort_keys=True, default=str)
+            with open("NoavaranToken.json", "w") as outfile:
+                outfile.write(json_object)
+                
+            self.tokenEx = now
+            self.token= data['token']
+            return self.token
+            
+        else:
+            return self.token                
+
+ 
     def connect_to_mysql(self):
         # Connecting from the server
-        conn = mysql.connector.connect(user = 'root',
-                                    host = 'localhost',
-                                    database = 'stockfeeder')
-        return conn
+        while True:
+            try:
+                conn = mysql.connector.connect(user = self.user,password=self.password, host = self.host,port=self.dbPort,auth_plugin='mysql_native_password',  database = self.dbName)
+                return conn
+            except:
+                time.sleep(60)
+                continue
+
+    def connect_to_pg(self):
+        connection = psycopg2.connect(user=self.user,
+                                password=self.password,
+                                host=self.host,
+                                port=self.dbPort,
+                                database=self.dbName)
+        return connection
+   
 
     def pointpos(self,x):
         if x['pivot']==1:
@@ -86,8 +134,10 @@ class TrendUpdate(threading.Thread):
         symbols_return={}
 
         for symbol in symbols:
+            r = self.get_data_noavaran(symbol)
 
-            r = self.get_data(symbol)
+            #r = self.get_data(symbol)
+            
             # try:
             if not symbol in r.keys():
                 print("symbol is not exist in %s "%(symbol))
@@ -100,7 +150,7 @@ class TrendUpdate(threading.Thread):
                 continue
 
             df =pd.DataFrame(series_buffer,columns =['Idx','time', 'open','high','low','close','volume'])       
-            df['time'] = pd.to_datetime(df['time'])
+            #df['time'] = pd.to_tim(df['time'])
             df.set_index('Idx')
             df.sort_values(by='time',inplace=True)
             #Check if NA values are in data
@@ -136,11 +186,11 @@ class TrendUpdate(threading.Thread):
                         if df.iloc[i].pivot == 1:
                             minim = np.append(minim, df.iloc[i].low)
                             xxmin = np.append(xxmin, i) #could be i instead df.iloc[i].name
-                            xxmindate = np.append(xxmindate, df.iloc[i].time.timestamp())
+                            xxmindate = np.append(xxmindate, df.iloc[i].time)
                         if df.iloc[i].pivot == 2:
                             maxim = np.append(maxim, df.iloc[i].high)
                             xxmax = np.append(xxmax, i) # df.iloc[i].name
-                            xxmaxdate = np.append(xxmaxdate, df.iloc[i].time.timestamp())
+                            xxmaxdate = np.append(xxmaxdate, df.iloc[i].time)
                             
                     if not np.any(xxmin) or not np.any(minim) or not np.any(xxmax) or not np.any(maxim):
                         continue
@@ -158,10 +208,10 @@ class TrendUpdate(threading.Thread):
 
 
                     xxmin = np.append(xxmin, xxmin[-1]+15)
-                    xxmindate = np.append(xxmindate,  (df.iloc[-1].time+ pd.Timedelta(days=15)).timestamp())
+                    xxmindate = np.append(xxmindate,  (df.iloc[-1].time+ timedelta(days=15).total_seconds()))
 
                     xxmax = np.append(xxmax, xxmax[-1]+15)
-                    xxmaxdate = np.append(xxmaxdate, (df.iloc[-1].time+ pd.Timedelta(days=15)).timestamp())                    
+                    xxmaxdate = np.append(xxmaxdate, (df.iloc[-1].time+ timedelta(days=15).total_seconds()))                    
 
                     x=xxmin
                     y=slmin*xxmin + intercmin
@@ -208,11 +258,11 @@ class TrendUpdate(threading.Thread):
                         if df.iloc[i].pivot == 1:
                             minim = np.append(minim, df.iloc[i].low)
                             xxmin = np.append(xxmin, i) #could be i instead df.iloc[i].name
-                            xxmindate = np.append(xxmindate, df.iloc[i].time.timestamp())
+                            xxmindate = np.append(xxmindate, df.iloc[i].time)
                         if df.iloc[i].pivot == 2:
                             maxim = np.append(maxim, df.iloc[i].high)
                             xxmax = np.append(xxmax, i) # df.iloc[i].name
-                            xxmaxdate = np.append(xxmaxdate, df.iloc[i].time.timestamp())
+                            xxmaxdate = np.append(xxmaxdate, df.iloc[i].time)
                             #convert xxmaxdate without +e for example 1.6266528e+09 show 1626652800
                              
                     if not np.any(xxmin) or not np.any(minim) or not np.any(xxmax) or not np.any(maxim):
@@ -337,7 +387,50 @@ class TrendUpdate(threading.Thread):
             main_dict[InsCode].append(re_json)    
             
         return main_dict
-                           
+
+    def get_data_noavaran(self,Inscode):
+        main_dict = {}
+        now = datetime.now()
+        time_tset_now = now.strftime("%Y%m%d")
+        if Inscode in self.getNoavaranSymbol:
+            pass
+        else:
+            main_dict[Inscode]=[]
+            return main_dict
+        
+        url = "https://data3.nadpco.com/api/v3/TS/AdjustedTradesById/"+str(int(self.getNoavaranSymbol[Inscode]["coID"]))+"?fromdate=14000501"
+        x=[] #price series  
+        payload={}
+
+
+        headers = {
+            'Authorization': 'Bearer '+ self.get_token(),
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("GET", url, headers=headers, data=payload)
+        data= response.text
+        data=json.loads(data)
+        counter=0
+        for bar in data: 
+        
+            re_json={
+                "idx": counter,
+                "time": datetime.strptime(bar["tradeDateGre"], "%Y-%m-%dT%H:%M:%S").timestamp(),
+                "open": float(bar["openingAdjPrice"]),
+                "high": float(bar["maxAdjPrice"]),
+                "low" : float(bar["minAdjPrice"]),
+                "close" : float(bar["lastAdjPrice"]),
+                "volume" : float(bar["tradeValue"]), 
+            } 
+            if Inscode not in main_dict.keys():
+                main_dict[Inscode] = []
+            main_dict[Inscode].append(re_json)  
+            counter=counter+1  
+            
+        return main_dict
+       
+
+                          
     def getSymbols(self):
         return self.getExchangeSymbols("tsetmc")
         
@@ -362,6 +455,7 @@ class TrendUpdate(threading.Thread):
 
         allSymbols=self.getSymbols()
         
+        
         for symbols in zip(*(iter(allSymbols),) * 20):
             self.calculate_indicator(symbols,patterns,"1d")
             print('sleep')
@@ -383,6 +477,25 @@ class TrendUpdate(threading.Thread):
                 symbols.append(key)
                         
         return symbols
+
+    def getNoavaranExchangeSymbols(self):
+        url = "https://data3.nadpco.com/api/v3/BaseInfo/Companies"
+
+        payload={}
+        headers = {}
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+
+        data= response.text
+        Instrument=json.loads(data)
+        main_dict={}
+
+        list=[]
+        for c in Instrument:
+            main_dict[c["tseCode"]]=c 
+    
+        return main_dict
+    
     
     def update_key(self,symbol,symbols_return):
 
@@ -391,29 +504,29 @@ class TrendUpdate(threading.Thread):
         if not 'trend' in symbols_return or not 'pivot' in symbols_return:
             return
         
-        mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
+        # mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
         val = (
             str(symbols_return['trend']['value']) ,
             str(symbols_return['pivot']['value']) ,
             symbol
         )
 
-        mycursor = mydb.cursor()
-        #print(sql%(val))
-        r=mycursor.execute(sql, val)
-        mydb.commit()
+        connection = self.connect_to_mysql()
+        cursor = connection.cursor()
+        cursor.execute(sql, val)
         try:
-            if(mycursor.rowcount==0):
+            if(cursor.rowcount==0):
                 
                 sql ="INSERT INTO `stock_patterns` (`trend`,`pivot`,`InsCode`) VALUES (%s,%s,%s)"
-                r=mycursor.execute(sql, val)
-                mydb.commit()
+                r=cursor.execute(sql, val)
+                connection.commit()
                 print("Inserted")
-            print(mycursor.rowcount, "details inserted")
+            print(cursor.rowcount ,"details inserted")
         except:
             pass
         
-        mydb.close()
+        cursor.close()
+        connection.close()
 
 
 class ScanicalIndicator:
@@ -451,8 +564,9 @@ def now_time_run():
     time_tset_now = now.strftime("%H%M")
     weekday=datetime.today().weekday()
     print(time_tset_now)
-    s_t = "1701"
-    e_t = "1702"
+    s_t = "1700"
+    e_t = "1701"
+ 
     if time_tset_now <e_t and time_tset_now >= s_t and weekday in [6,5,0,1,2]:
         exit_run = False
     else:
@@ -460,15 +574,18 @@ def now_time_run():
     return exit_run
 
 if __name__ == '__main__':
+
+    indicator=TrendUpdate()
+    #indicator.load_machines()
     try:
-        indicator=TrendUpdate()
+        
         while True:
             while now_time_run():
                 print("Exit time")
                 time.sleep(60)
         
             indicator.load_machines()
-
+            
     except KeyboardInterrupt:
         print('Interrupted')
         try:
