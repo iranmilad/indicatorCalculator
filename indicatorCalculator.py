@@ -14,12 +14,14 @@ import math
 from datetime import datetime, timedelta
 import psycopg2
 from os import environ
+import urllib3
 
 DB_USER = environ.get("FOM_DB_USER", default='db_tseshow_user')
 DB_PASS = environ.get("FOM_DB_PASSWORD", default='l8PDQGtKyMvynFb')
-DB_HOST = environ.get("FOM_DB_HOST", default='87.107.172.173')
+DB_HOST = environ.get("FOM_DB_HOST", default='87.107.188.201')
 DB_PORT = environ.get("FOM_DB_PORT", default='6033')
 DB_NAME = environ.get("FOM_DB_NAME", default='stockfeeder')
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class IndicatorUpdate(threading.Thread):
 
@@ -824,9 +826,20 @@ class IndicatorUpdate(threading.Thread):
             'Authorization': 'Bearer '+ self.get_token(),
             'Content-Type': 'application/json'
         }
-        response = requests.request("GET", url, headers=headers, data=payload)
-        data= response.text
-        data=json.loads(data)
+        
+        try:
+            response = requests.request("GET", url, headers=headers, data=payload)
+            if response.status_code==200:
+                data= response.text
+                data=json.loads(data)
+            else:
+                time.sleep(60)
+                return main_dict
+        except:
+            main_dict[Inscode]=[]
+            print("error in get noavaran request go to next symbol")
+            return main_dict
+            
         for bar in data: 
         
             re_json={
@@ -885,7 +898,7 @@ class IndicatorUpdate(threading.Thread):
             return []
         symbols=[]
         for (key,val) in x.items():
-            if val["YVal"]=="300":
+            if val["YVal"]=="300" or  val["YVal"]=="303" or  val["YVal"]=="305" or  val["YVal"]=="307" or  val["YVal"]=="309" or  val["YVal"]=="313" or  val["YVal"]=="300" or  val["YVal"]=="322" or  val["YVal"]=="323":
                 symbols.append(key)
                         
         return symbols
@@ -894,11 +907,18 @@ class IndicatorUpdate(threading.Thread):
 
         payload={}
         headers = {}
+        while True:
+            try:
+                response = requests.request("GET", url, headers=headers, data=payload)
+                data= response.text
+                Instrument=json.loads(data)
+                break
+            except:
+                print('noavaran symbols connection error')
+                #print(response.text)
+                time.sleep(10)
+                continue
 
-        response = requests.request("GET", url, headers=headers, data=payload)
-
-        data= response.text
-        Instrument=json.loads(data)
         main_dict={}
 
         list=[]
@@ -978,9 +998,9 @@ class IndicatorUpdate(threading.Thread):
         type(symbols_return['historical_price']['value']['date_low'])
         cursor = connection.cursor()
         cursor.execute(sql, val)
-
+        connection.commit()
         try:
-            if(cursor.rowcount==0):
+            if cursor.rowcount==0:
                 
                 sql ="INSERT INTO `stock_params` (`stoch_signal`,`StochasticOscillator`,`psar`,`psar_down`,`psar_down_indicator`,`psar_up`,`psar_up_indicator`,`adx_positive`, `adx_negative` ,`ichimoku_a`, `ichimoku_b`, `ichimoku_base_line`, `ichimoku_conversion_line`,`historical_low`,`historical_high`,`historical_low_date`,`historical_high_date`,`rsi`, `macd`,`Signal_Line`,`MACD_Line`, `uo`, `roc`, `ema_10`, `ema_20`, `ema_50`, `ema_100`, `ema_200`, `sma_10`, `sma_20`, `sma_50`, `sma_100`, `sma_200`, `stoch`, `adx`, `cci_20`, `chaikin_money_flow`, `stoch_rsi`, `williams`, `atr_14`, `money_flow_index`,`InsCode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                 r=cursor.execute(sql, val)
@@ -1040,6 +1060,7 @@ def now_time_run():
 if __name__ == '__main__':
     try:
         indicator=IndicatorUpdate()
+        #indicator.load_machines()
         while True:
             while now_time_run():
                 print("Exit time")

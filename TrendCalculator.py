@@ -17,12 +17,14 @@ import numpy as np
 from scipy.stats import linregress
 import psycopg2
 from os import environ
+import urllib3
 
 DB_USER = environ.get("FOM_DB_USER", default='db_tseshow_user')
 DB_PASS = environ.get("FOM_DB_PASSWORD", default='l8PDQGtKyMvynFb')
-DB_HOST = environ.get("FOM_DB_HOST", default='87.107.172.173')
+DB_HOST = environ.get("FOM_DB_HOST", default='87.107.188.201')
 DB_PORT = environ.get("FOM_DB_PORT", default='6033')
 DB_NAME = environ.get("FOM_DB_NAME", default='stockfeeder')
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class TrendUpdate(threading.Thread):
 
@@ -229,9 +231,11 @@ class TrendUpdate(threading.Thread):
                     symbols_return[pattern]={
                             "value":{
                                 "time_min": time_min.tolist(),
-                                "price_min": price_min.tolist(),
+                                #"price_min": price_min.tolist(),
+                                "price_min": xxmin.tolist(),
                                 "time_max": time_max.tolist(),
-                                "price_max": price_max.tolist(),
+                                #"price_max": price_max.tolist(),
+                                "price_max": xxmax.tolist(),
                                 
                             },
 
@@ -407,9 +411,19 @@ class TrendUpdate(threading.Thread):
             'Authorization': 'Bearer '+ self.get_token(),
             'Content-Type': 'application/json'
         }
-        response = requests.request("GET", url, headers=headers, data=payload)
-        data= response.text
-        data=json.loads(data)
+        try:
+            response = requests.request("GET", url, headers=headers, data=payload)
+            if response.status_code==200:
+                data= response.text
+                data=json.loads(data)
+            else:
+                time.sleep(60)
+                return main_dict
+        except:
+            print('get error in noavaran get data on url '+url)
+            main_dict[Inscode]=[]
+            return main_dict     
+               
         counter=0
         for bar in data: 
         
@@ -473,7 +487,7 @@ class TrendUpdate(threading.Thread):
             return []
         symbols=[]
         for (key,val) in x.items():
-            if val["YVal"]=="300":
+            if val["YVal"]=="300" or  val["YVal"]=="303" or  val["YVal"]=="305" or  val["YVal"]=="307" or  val["YVal"]=="309" or  val["YVal"]=="313" or  val["YVal"]=="300" or  val["YVal"]=="322" or  val["YVal"]=="323":
                 symbols.append(key)
                         
         return symbols
@@ -483,11 +497,18 @@ class TrendUpdate(threading.Thread):
 
         payload={}
         headers = {}
+        while True:
+            try:
+                response = requests.request("GET", url, headers=headers, data=payload)
+                data= response.text
+                Instrument=json.loads(data)
+                break
+            except:
+                print('noavaran symbols connection error')
+                #print(response.text)
+                time.sleep(10)
+                continue
 
-        response = requests.request("GET", url, headers=headers, data=payload)
-
-        data= response.text
-        Instrument=json.loads(data)
         main_dict={}
 
         list=[]
@@ -496,34 +517,37 @@ class TrendUpdate(threading.Thread):
     
         return main_dict
     
-    
     def update_key(self,symbol,symbols_return):
 
 
-        sql = "UPDATE `stock_patterns` SET `trend`=%s,`pivot`=%s WHERE `Inscode`=%s"
+        sql = "UPDATE `stock_patterns` SET `trend`= %s ,`pivot`= %s WHERE `InsCode`= %s"
         if not 'trend' in symbols_return or not 'pivot' in symbols_return:
             return
         
         # mydb = mysql.connector.connect(user = self.mysqluser, host = self.mySqlHost, database = self.mySqlDBName)
         val = (
+            # "",
+            # "",
             str(symbols_return['trend']['value']) ,
             str(symbols_return['pivot']['value']) ,
-            symbol
+            int(symbol)
         )
 
         connection = self.connect_to_mysql()
         cursor = connection.cursor()
         cursor.execute(sql, val)
+        connection.commit()
+        #print(cursor.statement)
+        # cursor._last_executed
         try:
-            if(cursor.rowcount==0):
+            if cursor.rowcount==0:
                 
                 sql ="INSERT INTO `stock_patterns` (`trend`,`pivot`,`InsCode`) VALUES (%s,%s,%s)"
                 r=cursor.execute(sql, val)
                 connection.commit()
                 print("Inserted")
-            print(cursor.rowcount ,"details inserted")
-        except:
-            pass
+            print(cursor.rowcount ,"details update")
+        except Exception as e: print(e)
         
         cursor.close()
         connection.close()
@@ -564,8 +588,8 @@ def now_time_run():
     time_tset_now = now.strftime("%H%M")
     weekday=datetime.today().weekday()
     print(time_tset_now)
-    s_t = "1700"
-    e_t = "1701"
+    s_t = "2300"
+    e_t = "2301"
  
     if time_tset_now <e_t and time_tset_now >= s_t and weekday in [6,5,0,1,2]:
         exit_run = False

@@ -14,12 +14,14 @@ import math
 from datetime import datetime, timedelta
 import psycopg2
 from os import environ
+import urllib3
 
 DB_USER = environ.get("FOM_DB_USER", default='db_tseshow_user')
 DB_PASS = environ.get("FOM_DB_PASSWORD", default='l8PDQGtKyMvynFb')
-DB_HOST = environ.get("FOM_DB_HOST", default='87.107.172.173')
+DB_HOST = environ.get("FOM_DB_HOST", default='87.107.188.201')
 DB_PORT = environ.get("FOM_DB_PORT", default='6033')
 DB_NAME = environ.get("FOM_DB_NAME", default='stockfeeder')
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class IndicatorUpdate(threading.Thread):
 
@@ -139,161 +141,161 @@ class IndicatorUpdate(threading.Thread):
                 #try:
 
                 if pattern=="rate_of_return":
-                    df['1']=(df.iloc[-1]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
-                    df['5']=(df.iloc[-5]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
-                    df['10']=(df.iloc[-10]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
-                    df['20']= (df.iloc[-20]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
-                    df['50']= (df.iloc[-50]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
-                    df['100']= (df.iloc[-100]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
-                    df['200']= (df.iloc[-200]["close"] - df.iloc[0]["close"]) / df.iloc[0]["close"]
+                    df['1']=(df.iloc[0]["close"] - df.iloc[1]["close"]) / df.iloc[1]["close"]
+                    df['5']=(df.iloc[0]["close"] - df.iloc[4]["close"]) / df.iloc[4]["close"]
+                    df['10']=(df.iloc[0]["close"] - df.iloc[9]["close"]) / df.iloc[9]["close"]
+                    df['20']= (df.iloc[0]["close"] - df.iloc[19]["close"]) / df.iloc[19]["close"]
+                    df['50']= (df.iloc[0]["close"] - df.iloc[49]["close"]) / df.iloc[49]["close"]
+                    df['100']= (df.iloc[0]["close"] - df.iloc[99]["close"]) / df.iloc[99]["close"]
+                    df['200']= (df.iloc[0]["close"] - df.iloc[199]["close"]) / df.iloc[199]["close"]
                     
 
-                    previous_df['1']= (previous_df.iloc[-1]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
-                    previous_df['5']= (previous_df.iloc[-5]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
-                    previous_df['10']= (previous_df.iloc[-10]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
-                    previous_df['20']= (previous_df.iloc[-20]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
-                    previous_df['50']= (previous_df.iloc[-50]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
-                    previous_df['100']= (previous_df.iloc[-100]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
-                    previous_df['200']= (previous_df.iloc[-200]["close"] - previous_df.iloc[0]["close"]) / previous_df.iloc[0]["close"]
+                    previous_df['1']=(previous_df.iloc[0]["close"] - previous_df.iloc[1]["close"]) / previous_df.iloc[1]["close"]
+                    previous_df['5']=(previous_df.iloc[0]["close"] - previous_df.iloc[4]["close"]) / previous_df.iloc[4]["close"]
+                    previous_df['10']=(previous_df.iloc[0]["close"] - previous_df.iloc[9]["close"]) / previous_df.iloc[9]["close"]
+                    previous_df['20']= (previous_df.iloc[0]["close"] - previous_df.iloc[19]["close"]) / previous_df.iloc[19]["close"]
+                    previous_df['50']= (previous_df.iloc[0]["close"] - previous_df.iloc[49]["close"]) / previous_df.iloc[49]["close"]
+                    previous_df['100']= (previous_df.iloc[0]["close"] - previous_df.iloc[99]["close"]) / previous_df.iloc[99]["close"]
+                    previous_df['200']= (previous_df.iloc[0]["close"] - previous_df.iloc[199]["close"]) / previous_df.iloc[199]["close"]
                     
                     symbols_return[pattern]={
                             'value':{
-                                '1':df.iloc[-1]['1'],
-                                '5':df.iloc[-1]['5'],
-                                '10':df.iloc[-1]['10'],
-                                '20':df.iloc[-1]['20'],
-                                '50':df.iloc[-1]['50'],
-                                '100':df.iloc[-1]['100'],
-                                '200':df.iloc[-1]['200']
+                                '1':df.iloc[0]['1'],
+                                '5':df.iloc[0]['5'],
+                                '10':df.iloc[0]['10'],
+                                '20':df.iloc[0]['20'],
+                                '50':df.iloc[0]['50'],
+                                '100':df.iloc[0]['100'],
+                                '200':df.iloc[0]['200']
                             },
                             'previous':{
-                                '1':previous_df.iloc[-1]['1'],
-                                '5':previous_df.iloc[-1]['5'],
-                                '10':previous_df.iloc[-1]['10'],
-                                '20':previous_df.iloc[-1]['20'],
-                                '50':previous_df.iloc[-1]['50'],
-                                '100':previous_df.iloc[-1]['100'],
-                                '200':previous_df.iloc[-1]['200']
+                                '1':previous_df.iloc[0]['1'],
+                                '5':previous_df.iloc[0]['5'],
+                                '10':previous_df.iloc[0]['10'],
+                                '20':previous_df.iloc[0]['20'],
+                                '50':previous_df.iloc[0]['50'],
+                                '100':previous_df.iloc[0]['100'],
+                                '200':previous_df.iloc[0]['200']
                             },
-                            'last_update': df.iloc[-1]['date'],
-                            'last_price': df.iloc[-1]['close'],
+                            'last_update': df.iloc[0]['date'],
+                            'last_price': df.iloc[0]['close'],
                     }
                 elif pattern=="avg_QTotCap":
-                    df['avg_QTotCap_1']=(df.iloc[-1]["QTotCap"]) / 1
-                    df['avg_QTotCap_5']=(df.iloc[-5:]["QTotCap"].sum()) / 5
-                    df['avg_QTotCap_10']=(df.iloc[-10:]["QTotCap"].sum()) / 10
-                    df['avg_QTotCap_20']=(df.iloc[-20:]["QTotCap"].sum()) / 20
-                    df['avg_QTotCap_50']=(df.iloc[-50:]["QTotCap"].sum()) / 50
-                    df['avg_QTotCap_100']=(df.iloc[-100:]["QTotCap"].sum()) / 100
-                    df['avg_QTotCap_200']=(df.iloc[-200:]["QTotCap"].sum()) / 200
+                    df['avg_QTotCap_1']=(df.iloc[1]["QTotCap"]) / 1
+                    df['avg_QTotCap_5']=(df.iloc[0:4]["QTotCap"].sum()) / 5
+                    df['avg_QTotCap_10']=(df.iloc[0:9]["QTotCap"].sum()) / 10
+                    df['avg_QTotCap_20']=(df.iloc[0:19]["QTotCap"].sum()) / 20
+                    df['avg_QTotCap_50']=(df.iloc[0:49]["QTotCap"].sum()) / 50
+                    df['avg_QTotCap_100']=(df.iloc[0:99]["QTotCap"].sum()) / 100
+                    df['avg_QTotCap_200']=(df.iloc[0:199]["QTotCap"].sum()) / 200
                     
-                    previous_df['avg_QTotCap_1']=(previous_df.iloc[-1]["QTotCap"]) / 1
-                    previous_df['avg_QTotCap_5']=(previous_df.iloc[-5:]["QTotCap"].sum()) / 5
-                    previous_df['avg_QTotCap_10']=(previous_df.iloc[-10:]["QTotCap"].sum()) / 10
-                    previous_df['avg_QTotCap_20']=(previous_df.iloc[-20:]["QTotCap"].sum()) / 20
-                    previous_df['avg_QTotCap_50']=(previous_df.iloc[-50:]["QTotCap"].sum()) / 50
-                    previous_df['avg_QTotCap_100']=(previous_df.iloc[-100:]["QTotCap"].sum()) / 100
-                    previous_df['avg_QTotCap_200']=(previous_df.iloc[-200:]["QTotCap"].sum()) / 200
+                    previous_df['avg_QTotCap_1']=(previous_df.iloc[1]["QTotCap"]) / 1
+                    previous_df['avg_QTotCap_5']=(previous_df.iloc[0:4]["QTotCap"].sum()) / 5
+                    previous_df['avg_QTotCap_10']=(previous_df.iloc[0:9]["QTotCap"].sum()) / 10
+                    previous_df['avg_QTotCap_20']=(previous_df.iloc[0:19]["QTotCap"].sum()) / 20
+                    previous_df['avg_QTotCap_50']=(previous_df.iloc[0:49]["QTotCap"].sum()) / 50
+                    previous_df['avg_QTotCap_100']=(previous_df.iloc[0:99]["QTotCap"].sum()) / 100
+                    previous_df['avg_QTotCap_200']=(previous_df.iloc[0:199]["QTotCap"].sum()) / 200
                     
                     symbols_return[pattern]={
                         'value':{
-                            '1':df.iloc[-1]['avg_QTotCap_1'],
-                            '5':df.iloc[-1]['avg_QTotCap_5'],
-                            '10':df.iloc[-1]['avg_QTotCap_10'],
-                            '20':df.iloc[-1]['avg_QTotCap_20'],
-                            '50':df.iloc[-1]['avg_QTotCap_50'],
-                            '100':df.iloc[-1]['avg_QTotCap_100'],
-                            '200':df.iloc[-1]['avg_QTotCap_200']
+                            '1':df.iloc[0]['avg_QTotCap_1'],
+                            '5':df.iloc[0]['avg_QTotCap_5'],
+                            '10':df.iloc[0]['avg_QTotCap_10'],
+                            '20':df.iloc[0]['avg_QTotCap_20'],
+                            '50':df.iloc[0]['avg_QTotCap_50'],
+                            '100':df.iloc[0]['avg_QTotCap_100'],
+                            '200':df.iloc[0]['avg_QTotCap_200']
                         },
                         'previous':{
-                            '1':previous_df.iloc[-1]['avg_QTotCap_1'],
-                            '5':previous_df.iloc[-1]['avg_QTotCap_5'],
-                            '10':previous_df.iloc[-1]['avg_QTotCap_10'],
-                            '20':previous_df.iloc[-1]['avg_QTotCap_20'],
-                            '50':previous_df.iloc[-1]['avg_QTotCap_50'],
-                            '100':previous_df.iloc[-1]['avg_QTotCap_100'],
-                            '200':previous_df.iloc[-1]['avg_QTotCap_200']
+                            '1':previous_df.iloc[0]['avg_QTotCap_1'],
+                            '5':previous_df.iloc[0]['avg_QTotCap_5'],
+                            '10':previous_df.iloc[0]['avg_QTotCap_10'],
+                            '20':previous_df.iloc[0]['avg_QTotCap_20'],
+                            '50':previous_df.iloc[0]['avg_QTotCap_50'],
+                            '100':previous_df.iloc[0]['avg_QTotCap_100'],
+                            '200':previous_df.iloc[0]['avg_QTotCap_200']
                         },
-                        'last_update': df.iloc[-1]['date'],
-                        'last_price': df.iloc[-1]['close'],
+                        'last_update': df.iloc[0]['date'],
+                        'last_price': df.iloc[0]['close'],
                     }
                 elif pattern=="avg_QTotTran5J":
-                    df['avg_QTotTran5J_1']=(df.iloc[-1]["QTotTran5J"]) / 1
-                    df['avg_QTotTran5J_5']=(df.iloc[-5:]["QTotTran5J"].sum()) / 5
-                    df['avg_QTotTran5J_10']=(df.iloc[-10:]["QTotTran5J"].sum()) / 10
-                    df['avg_QTotTran5J_20']=(df.iloc[-20:]["QTotTran5J"].sum()) / 20
-                    df['avg_QTotTran5J_50']=(df.iloc[-50:]["QTotTran5J"].sum()) / 50
-                    df['avg_QTotTran5J_100']=(df.iloc[-100:]["QTotTran5J"].sum()) / 100
-                    df['avg_QTotTran5J_200']=(df.iloc[-200:]["QTotTran5J"].sum()) / 200
+                    df['avg_QTotTran5J_1']=(df.iloc[1]["QTotTran5J"]) / 1
+                    df['avg_QTotTran5J_5']=(df.iloc[0:4]["QTotTran5J"].sum()) / 5
+                    df['avg_QTotTran5J_10']=(df.iloc[0:9]["QTotTran5J"].sum()) / 10
+                    df['avg_QTotTran5J_20']=(df.iloc[0:19]["QTotTran5J"].sum()) / 20
+                    df['avg_QTotTran5J_50']=(df.iloc[0:49]["QTotTran5J"].sum()) / 50
+                    df['avg_QTotTran5J_100']=(df.iloc[0:99]["QTotTran5J"].sum()) / 100
+                    df['avg_QTotTran5J_200']=(df.iloc[0:199]["QTotTran5J"].sum()) / 200
                     
-                    previous_df['avg_QTotTran5J_1']=(previous_df.iloc[-1]["QTotTran5J"]) / 1
-                    previous_df['avg_QTotTran5J_5']=(previous_df.iloc[-5:]["QTotTran5J"].sum()) / 5
-                    previous_df['avg_QTotTran5J_10']=(previous_df.iloc[-10:]["QTotTran5J"].sum()) / 10
-                    previous_df['avg_QTotTran5J_20']=(previous_df.iloc[-20:]["QTotTran5J"].sum()) / 20
-                    previous_df['avg_QTotTran5J_50']=(previous_df.iloc[-50:]["QTotTran5J"].sum()) / 50
-                    previous_df['avg_QTotTran5J_100']=(previous_df.iloc[-100:]["QTotTran5J"].sum()) / 100
-                    previous_df['avg_QTotTran5J_200']=(previous_df.iloc[-200:]["QTotTran5J"].sum()) / 200
+                    previous_df['avg_QTotTran5J_1']=(previous_df.iloc[0]["QTotTran5J"]) / 1
+                    previous_df['avg_QTotTran5J_5']=(previous_df.iloc[0:4]["QTotTran5J"].sum()) / 5
+                    previous_df['avg_QTotTran5J_10']=(previous_df.iloc[0:9]["QTotTran5J"].sum()) / 10
+                    previous_df['avg_QTotTran5J_20']=(previous_df.iloc[0:19]["QTotTran5J"].sum()) / 20
+                    previous_df['avg_QTotTran5J_50']=(previous_df.iloc[0:49]["QTotTran5J"].sum()) / 50
+                    previous_df['avg_QTotTran5J_100']=(previous_df.iloc[0:99]["QTotTran5J"].sum()) / 100
+                    previous_df['avg_QTotTran5J_200']=(previous_df.iloc[0:199]["QTotTran5J"].sum()) / 200
                     
                     symbols_return[pattern]={
                         'value':{
-                            '1':df.iloc[-1]['avg_QTotTran5J_1'],
-                            '5':df.iloc[-1]['avg_QTotTran5J_5'],
-                            '10':df.iloc[-1]['avg_QTotTran5J_10'],
-                            '20':df.iloc[-1]['avg_QTotTran5J_20'],
-                            '50':df.iloc[-1]['avg_QTotTran5J_50'],
-                            '100':df.iloc[-1]['avg_QTotTran5J_100'],
-                            '200':df.iloc[-1]['avg_QTotTran5J_200']
+                            '1':df.iloc[0]['avg_QTotTran5J_1'],
+                            '5':df.iloc[0]['avg_QTotTran5J_5'],
+                            '10':df.iloc[0]['avg_QTotTran5J_10'],
+                            '20':df.iloc[0]['avg_QTotTran5J_20'],
+                            '50':df.iloc[0]['avg_QTotTran5J_50'],
+                            '100':df.iloc[0]['avg_QTotTran5J_100'],
+                            '200':df.iloc[0]['avg_QTotTran5J_200']
                         },
                         'previous':{
-                            '1':previous_df.iloc[-1]['avg_QTotTran5J_1'],
-                            '5':previous_df.iloc[-1]['avg_QTotTran5J_5'],
-                            '10':previous_df.iloc[-1]['avg_QTotTran5J_10'],
-                            '20':previous_df.iloc[-1]['avg_QTotTran5J_20'],
-                            '50':previous_df.iloc[-1]['avg_QTotTran5J_50'],
-                            '100':previous_df.iloc[-1]['avg_QTotTran5J_100'],
-                            '200':previous_df.iloc[-1]['avg_QTotTran5J_200']
+                            '1':previous_df.iloc[0]['avg_QTotTran5J_1'],
+                            '5':previous_df.iloc[0]['avg_QTotTran5J_5'],
+                            '10':previous_df.iloc[0]['avg_QTotTran5J_10'],
+                            '20':previous_df.iloc[0]['avg_QTotTran5J_20'],
+                            '50':previous_df.iloc[0]['avg_QTotTran5J_50'],
+                            '100':previous_df.iloc[0]['avg_QTotTran5J_100'],
+                            '200':previous_df.iloc[0]['avg_QTotTran5J_200']
                         },
-                        'last_update': df.iloc[-1]['date'],
-                        'last_price': df.iloc[-1]['close'],
+                        'last_update': df.iloc[0]['date'],
+                        'last_price': df.iloc[0]['close'],
                     }
                 elif pattern=="avg_ZTotTran": #average of total transactions per day
-                    df['avg_ZTotTran_1']=(df.iloc[-1]["ZTotTran"]) / 1
-                    df['avg_ZTotTran_5']=(df.iloc[-5:]["ZTotTran"].sum()) / 5
-                    df['avg_ZTotTran_10']=(df.iloc[-10:]["ZTotTran"].sum()) / 10
-                    df['avg_ZTotTran_20']=(df.iloc[-20:]["ZTotTran"].sum()) / 20
-                    df['avg_ZTotTran_50']=(df.iloc[-50:]["ZTotTran"].sum()) / 50
-                    df['avg_ZTotTran_100']=(df.iloc[-100:]["ZTotTran"].sum()) / 100
-                    df['avg_ZTotTran_200']=(df.iloc[-200:]["ZTotTran"].sum()) / 200
+                    df['avg_ZTotTran_1']=(df.iloc[0]["ZTotTran"]) / 1
+                    df['avg_ZTotTran_5']=(df.iloc[0:4]["ZTotTran"].sum()) / 5
+                    df['avg_ZTotTran_10']=(df.iloc[0:9]["ZTotTran"].sum()) / 10
+                    df['avg_ZTotTran_20']=(df.iloc[0:19]["ZTotTran"].sum()) / 20
+                    df['avg_ZTotTran_50']=(df.iloc[0:49]["ZTotTran"].sum()) / 50
+                    df['avg_ZTotTran_100']=(df.iloc[0:99]["ZTotTran"].sum()) / 100
+                    df['avg_ZTotTran_200']=(df.iloc[0:199]["ZTotTran"].sum()) / 200
                     
-                    previous_df['avg_ZTotTran_1']=(previous_df.iloc[-1]["ZTotTran"]) / 1
-                    previous_df['avg_ZTotTran_5']=(previous_df.iloc[-5:]["ZTotTran"].sum()) / 5
-                    previous_df['avg_ZTotTran_10']=(previous_df.iloc[-10:]["ZTotTran"].sum()) / 10
-                    previous_df['avg_ZTotTran_20']=(previous_df.iloc[-20:]["ZTotTran"].sum()) / 20
-                    previous_df['avg_ZTotTran_50']=(previous_df.iloc[-50:]["ZTotTran"].sum()) / 50
-                    previous_df['avg_ZTotTran_100']=(previous_df.iloc[-100:]["ZTotTran"].sum()) / 100
-                    previous_df['avg_ZTotTran_200']=(previous_df.iloc[-200:]["ZTotTran"].sum()) / 200
+                    previous_df['avg_ZTotTran_1']=(previous_df.iloc[0]["ZTotTran"]) / 1
+                    previous_df['avg_ZTotTran_5']=(previous_df.iloc[0:4]["ZTotTran"].sum()) / 5
+                    previous_df['avg_ZTotTran_10']=(previous_df.iloc[0:9]["ZTotTran"].sum()) / 10
+                    previous_df['avg_ZTotTran_20']=(previous_df.iloc[0:19]["ZTotTran"].sum()) / 20
+                    previous_df['avg_ZTotTran_50']=(previous_df.iloc[0:49]["ZTotTran"].sum()) / 50
+                    previous_df['avg_ZTotTran_100']=(previous_df.iloc[0:99]["ZTotTran"].sum()) / 100
+                    previous_df['avg_ZTotTran_200']=(previous_df.iloc[0:199]["ZTotTran"].sum()) / 200
                      
                     symbols_return[pattern]={
                         'value':{
-                            '1':df.iloc[-1]['avg_ZTotTran_1'],
-                            '5':df.iloc[-1]['avg_ZTotTran_5'],
-                            '10':df.iloc[-1]['avg_ZTotTran_10'],
-                            '20':df.iloc[-1]['avg_ZTotTran_20'],
-                            '50':df.iloc[-1]['avg_ZTotTran_50'],
-                            '100':df.iloc[-1]['avg_ZTotTran_100'],
-                            '200':df.iloc[-1]['avg_ZTotTran_200']
+                            '1':df.iloc[0]['avg_ZTotTran_1'],
+                            '5':df.iloc[0]['avg_ZTotTran_5'],
+                            '10':df.iloc[0]['avg_ZTotTran_10'],
+                            '20':df.iloc[0]['avg_ZTotTran_20'],
+                            '50':df.iloc[0]['avg_ZTotTran_50'],
+                            '100':df.iloc[0]['avg_ZTotTran_100'],
+                            '200':df.iloc[0]['avg_ZTotTran_200']
                         },
                         'previous':{
-                            '1':previous_df.iloc[-1]['avg_ZTotTran_1'],
-                            '5':previous_df.iloc[-1]['avg_ZTotTran_5'],
-                            '10':previous_df.iloc[-1]['avg_ZTotTran_10'],
-                            '20':previous_df.iloc[-1]['avg_ZTotTran_20'],
-                            '50':previous_df.iloc[-1]['avg_ZTotTran_50'],
-                            '100':previous_df.iloc[-1]['avg_ZTotTran_100'],
-                            '200':previous_df.iloc[-1]['avg_ZTotTran_200']
+                            '1':previous_df.iloc[0]['avg_ZTotTran_1'],
+                            '5':previous_df.iloc[0]['avg_ZTotTran_5'],
+                            '10':previous_df.iloc[0]['avg_ZTotTran_10'],
+                            '20':previous_df.iloc[0]['avg_ZTotTran_20'],
+                            '50':previous_df.iloc[0]['avg_ZTotTran_50'],
+                            '100':previous_df.iloc[0]['avg_ZTotTran_100'],
+                            '200':previous_df.iloc[0]['avg_ZTotTran_200']
                         },
-                        'last_update': df.iloc[-1]['date'],
-                        'last_price': df.iloc[-1]['close'],
+                        'last_update': df.iloc[0]['date'],
+                        'last_price': df.iloc[0]['close'],
                     }
                        
                     
@@ -393,9 +395,18 @@ class IndicatorUpdate(threading.Thread):
             'Authorization': 'Bearer '+ self.get_token(),
             'Content-Type': 'application/json'
         }
-        response = requests.request("GET", url, headers=headers, data=payload)
-        data= response.text
-        data=json.loads(data)
+        try:
+            response = requests.request("GET", url, headers=headers, data=payload)
+            if response.status_code==200:
+                data= response.text
+                data=json.loads(data)
+            else:
+                time.sleep(60)
+                return main_dict
+        except:
+            main_dict[Inscode]=[]
+            print("error in get noavaran request go to next symbol")
+            return main_dict
         # LVal18AFC	 نماد
         # DEven	 تاريخ
         # ZTotTran	تعداد معاملات
@@ -473,7 +484,7 @@ class IndicatorUpdate(threading.Thread):
             return []
         symbols=[]
         for (key,val) in x.items():
-            if val["YVal"]=="300":
+            if val["YVal"]=="300" or  val["YVal"]=="303" or  val["YVal"]=="305" or  val["YVal"]=="307" or  val["YVal"]=="309" or  val["YVal"]=="313" or  val["YVal"]=="300" or  val["YVal"]=="322" or  val["YVal"]=="323":
                 symbols.append(key)
                         
         return symbols
@@ -482,11 +493,18 @@ class IndicatorUpdate(threading.Thread):
 
         payload={}
         headers = {}
+        while True:
+            try:
+                response = requests.request("GET", url, headers=headers, data=payload)
+                data= response.text
+                Instrument=json.loads(data)
+                break
+            except:
+                print('noavaran symbols connection error')
+                #print(response.text)
+                time.sleep(10)
+                continue
 
-        response = requests.request("GET", url, headers=headers, data=payload)
-
-        data= response.text
-        Instrument=json.loads(data)
         main_dict={}
 
         list=[]
@@ -546,7 +564,7 @@ class IndicatorUpdate(threading.Thread):
         connection = self.connect_to_mysql()
         cursor = connection.cursor()
         cursor.execute(sql, val)
-
+        connection.commit()
         try:
             if(cursor.rowcount==0):
                 sql ="INSERT INTO `stock_rates` ( `rate_1`, `rate_5`, `rate_10`, `rate_20`, `rate_50`, `rate_100`, `rate_200`,`avg_QTotCap_1`, `avg_QTotCap_5` , `avg_QTotCap_10`, `avg_QTotCap_20`,  `avg_QTotCap_50`, `avg_QTotCap_100` , `avg_QTotCap_200`,`avg_QTotTran5J_1`, `avg_QTotTran5J_5` , `avg_QTotTran5J_10`, `avg_QTotTran5J_20`,  `avg_QTotTran5J_50`, `avg_QTotTran5J_100` , `avg_QTotTran5J_200` ,`avg_ZTotTran_1`, `avg_ZTotTran_5` , `avg_ZTotTran_10`, `avg_ZTotTran_20`,  `avg_ZTotTran_50`, `avg_ZTotTran_100` , `avg_ZTotTran_200` ,`Inscode`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
@@ -584,6 +602,7 @@ def now_time_run():
 if __name__ == '__main__':
     try:
         indicator=IndicatorUpdate()
+        indicator.load_machines()
         while True:
             while now_time_run():
                 print("Exit time")
